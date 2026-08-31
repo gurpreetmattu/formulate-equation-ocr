@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Error {{ code }} &middot; Equation OCR{% endblock %}
+{% block content %}
+<div class="hero">
+  <h1>Something went wrong</h1>
+  <p class="subtitle">{{ message }}</p>
+</div>
+<section class="card">
+  <div class="banner banner-error" role="alert">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 8v5M12 16h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    <div>Error {{ code }}</div>
+  </div>
+  <a href="{{ url_for('routes.recognize_page') }}" class="btn btn-primary">Back to Recognize</a>
+</section>
+{% endblock %}

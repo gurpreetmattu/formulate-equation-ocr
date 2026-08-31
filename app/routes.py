@@ -2,7 +2,7 @@
 import json
 import os
 
-from flask import Blueprint, current_app, jsonify, render_template, request
+from flask import Blueprint, Response, current_app, jsonify, render_template, request
 
 from app.deep_learning.preprocessing import PreprocessingError
 
@@ -113,6 +113,11 @@ def examples_page():
 @bp.route("/about")
 def about_page():
     return render_template("about.html")
+
+
+@bp.route("/robots.txt")
+def robots_txt():
+    return Response("User-agent: *\nAllow: /\n", mimetype="text/plain")
 
 
 @bp.route("/healthz")

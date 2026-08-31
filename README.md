@@ -223,6 +223,45 @@ Notes:
 See `.env.example` for the full list (`MODEL_PATH`, `VOCAB_PATH`, `DEVICE`,
 `SECRET_KEY`, `DEBUG`, `HOST`, `PORT`, `MAX_UPLOAD_MB`, `EXAMPLES_DIR`).
 
+## Production Hardening
+
+This is a small, single-purpose tool (upload an image, get LaTeX/MathML back) — not
+a multi-user product with accounts or persisted data. The hardening applied reflects
+that scope rather than a generic checklist:
+
+**Covered:**
+- Security response headers (`X-Content-Type-Options`, `X-Frame-Options`, a
+  `Content-Security-Policy` scoped to the exact origins the app loads — no wildcards)
+  and `ProxyFix` middleware so scheme/host are correct behind the Docker/Cloud Run
+  reverse proxy (`app/__init__.py`).
+- Consistent error responses: unknown routes and oversized/failed requests return a
+  styled page for browser navigation or a JSON `{"error": ...}` body for `/api/*`,
+  instead of Flask's raw default error pages.
+- Client-side upload validation (file type and size) sourced from the same
+  `app/config.py` values the server enforces (`ALLOWED_EXTENSIONS`,
+  `MAX_CONTENT_LENGTH`) — rejected immediately in the browser rather than after a
+  round trip that ends in a 413.
+- A client-side request timeout (`AbortController`, 90s) so a hung request has a
+  visible failure state instead of spinning forever, plus robust handling of a
+  non-JSON error response instead of a raw parse exception reaching the user.
+- `robots.txt`, favicon, and Open Graph/Twitter meta tags (this is a public tool with
+  nothing to hide from crawlers or unlink-preview).
+
+**Deliberately out of scope (and why):**
+- **No authentication/authorization, admin area, or CSRF token** — there is no
+  session/account state for any of these to protect; every request is anonymous and
+  stateless.
+- **No React/Next.js/TypeScript rewrite** — Flask/Jinja/vanilla JS is the right-sized
+  stack for one form and one JSON endpoint; a framework migration would add build
+  tooling and complexity with no corresponding product need.
+- **No upload progress bar** — typical inputs are KB-sized crops against an 8MB cap;
+  transfer time is negligible next to the multi-second CPU inference time the
+  existing loading state already covers.
+- **No Playwright/E2E suite** — the core flows (upload, drag-and-drop, keyboard
+  operability, error states) have been manually verified end-to-end in a real
+  browser; a full E2E framework has no CI pipeline to run in yet, so it's listed
+  under Next Steps rather than added speculatively.
+
 ## Limitations
 
 - Best on clear, high-contrast, printed (not handwritten) equations; performance on

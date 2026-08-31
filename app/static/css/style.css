@@ -571,6 +571,11 @@ h3 {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation-duration: 1.8s; }
+  .secondary-toggle .chevron { transition: none; }
+}
+
 /* ---------- Pipeline diagram (About page) ---------- */
 
 .pipeline {

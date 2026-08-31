@@ -16,6 +16,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (!form) return;
 
+  const MAX_BYTES = parseInt(form.dataset.maxBytes, 10) || Infinity;
+  const ALLOWED_EXTENSIONS = (form.dataset.allowedExtensions || "")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  const REQUEST_TIMEOUT_MS = 90000;
+
+  function showError(message) {
+    errorState.textContent = message;
+    errorState.hidden = false;
+  }
+
+  // Mirrors the server-side checks in app/routes.py (_allowed_file,
+  // MAX_CONTENT_LENGTH) so the user gets an immediate answer instead of a
+  // round trip that ends in a 413/400.
+  function validateFile(file) {
+    const ext = file.name.includes(".") ? file.name.split(".").pop().toLowerCase() : "";
+    if (!ALLOWED_EXTENSIONS.includes(ext)) {
+      return `Unsupported file type ".${ext || "?"}". Allowed: ${ALLOWED_EXTENSIONS.join(", ")}.`;
+    }
+    if (file.size > MAX_BYTES) {
+      const maxMb = (MAX_BYTES / (1024 * 1024)).toFixed(1);
+      const fileMb = (file.size / (1024 * 1024)).toFixed(1);
+      return `File is too large (${fileMb} MB). Maximum upload size is ${maxMb} MB.`;
+    }
+    return null;
+  }
+
   function escapeHtml(str) {
     return str.replace(/[&<>"']/g, (c) => ({
       "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
@@ -89,8 +117,22 @@ document.addEventListener("DOMContentLoaded", () => {
     submitBtn.disabled = true;
   }
 
+  // Shared entry point for both the native file picker and drag-and-drop:
+  // validates before accepting, so an oversized/wrong-type file never
+  // reaches the network layer.
+  function handleFileSelection(file) {
+    const validationError = validateFile(file);
+    if (validationError) {
+      clearSelectedFile();
+      showError(validationError);
+      return;
+    }
+    errorState.hidden = true;
+    showSelectedFile(file);
+  }
+
   fileInput.addEventListener("change", () => {
-    if (fileInput.files.length) showSelectedFile(fileInput.files[0]);
+    if (fileInput.files.length) handleFileSelection(fileInput.files[0]);
   });
 
   // The native <label for="..."> click-to-open behavior only fires on
@@ -132,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const files = e.dataTransfer.files;
     if (files.length) {
       fileInput.files = files;
-      showSelectedFile(files[0]);
+      handleFileSelection(files[0]);
     }
   });
 
@@ -154,6 +196,12 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
     if (!fileInput.files.length) return;
 
+    const validationError = validateFile(fileInput.files[0]);
+    if (validationError) {
+      showError(validationError);
+      return;
+    }
+
     errorState.hidden = true;
     previewSection.hidden = true;
     results.hidden = true;
@@ -163,9 +211,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const formData = new FormData();
     formData.append("image", fileInput.files[0]);
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
     try {
-      const res = await fetch("/api/predict", { method: "POST", body: formData });
-      const data = await res.json();
+      const res = await fetch("/api/predict", { method: "POST", body: formData, signal: controller.signal });
+
+      let data;
+      try {
+        data = await res.json();
+      } catch (parseErr) {
+        throw new Error(`Server returned an unexpected response (status ${res.status}).`);
+      }
 
       if (!res.ok) {
         throw new Error(data.error || "Prediction failed.");
@@ -188,9 +245,15 @@ document.addEventListener("DOMContentLoaded", () => {
         window.MathJax.typesetPromise([greedyRender, beamRender]);
       }
     } catch (err) {
-      errorState.textContent = err.message;
-      errorState.hidden = false;
+      if (err.name === "AbortError") {
+        showError("Request timed out. Please try again — CPU-only inference can be slow for large or complex images.");
+      } else if (err instanceof TypeError) {
+        showError("Could not reach the server. Check your connection and try again.");
+      } else {
+        showError(err.message);
+      }
     } finally {
+      clearTimeout(timeoutId);
       loadingState.hidden = true;
       submitBtn.disabled = false;
     }

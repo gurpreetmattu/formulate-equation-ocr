@@ -21,7 +21,9 @@
 
     <section class="card">
       <span class="step-label"><span class="step-index">1</span>Upload an image</span>
-      <form id="predict-form">
+      <form id="predict-form"
+            data-max-bytes="{{ config.MAX_CONTENT_LENGTH }}"
+            data-allowed-extensions="{{ config.ALLOWED_EXTENSIONS | join(',') }}">
         <label for="image-input" class="dropzone" id="dropzone" tabindex="{{ '-1' if load_error else '0' }}" role="button" aria-label="Upload an equation image" aria-disabled="{{ 'true' if load_error else 'false' }}">
           <input type="file" id="image-input" name="image" accept=".png,.jpg,.jpeg,.bmp,.tiff,.tif" hidden required {{ 'disabled' if load_error }}>
           <div id="dz-empty">
