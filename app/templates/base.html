@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Equation Recognition{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js" defer></script>
+</head>
+<body>
+<nav class="topnav">
+  <div class="brand">Equation OCR</div>
+  <div class="links">
+    <a href="{{ url_for('routes.recognize_page') }}">Recognize</a>
+    <a href="{{ url_for('routes.examples_page') }}">Examples</a>
+    <a href="{{ url_for('routes.about_page') }}">About</a>
+  </div>
+</nav>
+<main class="container">
+  {% block content %}{% endblock %}
+</main>
+<footer>
+  <p>Automated Printed Equation Recognition &amp; LaTeX/MathML Conversion &middot; academic project</p>
+</footer>
+</body>
+</html>

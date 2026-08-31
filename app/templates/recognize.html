@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Recognize an Equation{% endblock %}
+{% block content %}
+<h1>Automated Printed Equation Recognition</h1>
+<p class="subtitle">Upload an image of a printed math equation to get LaTeX and MathML output.</p>
+
+{% if load_error %}
+<div class="banner banner-error">
+  <strong>Model unavailable:</strong> {{ load_error }}
+</div>
+{% endif %}
+
+<section class="card">
+  <h2>1. Upload an image</h2>
+  <p class="hint">Accepted formats: PNG, JPG, JPEG, BMP, TIFF. Best results with clear, cropped, high-contrast scans of printed equations.</p>
+  <form id="predict-form">
+    <input type="file" id="image-input" name="image" accept=".png,.jpg,.jpeg,.bmp,.tiff,.tif" required {{ 'disabled' if load_error }}>
+    <button type="submit" id="submit-btn" {{ 'disabled' if load_error }}>Recognize</button>
+  </form>
+  <div id="empty-state" class="hint">No image selected yet.</div>
+  <div id="loading-state" class="hint" hidden>Running inference&hellip;</div>
+  <div id="error-state" class="banner banner-error" hidden></div>
+</section>
+
+<section class="card" id="results" hidden>
+  <h2>2. Preprocessed input</h2>
+  <img id="preview-img" alt="Preprocessed equation" class="preview-img">
+
+  <h2>3. Model outputs</h2>
+  <div class="grid-2">
+    <div>
+      <h3>Greedy Decoding</h3>
+      <p class="label">LaTeX</p>
+      <pre id="greedy-latex" class="code-block"></pre>
+      <p class="label">MathML</p>
+      <pre id="greedy-mathml" class="code-block"></pre>
+      <p class="label">Rendered</p>
+      <div id="greedy-render" class="render-box"></div>
+    </div>
+    <div>
+      <h3>Beam Search Decoding</h3>
+      <p class="label">LaTeX</p>
+      <pre id="beam-latex" class="code-block"></pre>
+      <p class="label">MathML</p>
+      <pre id="beam-mathml" class="code-block"></pre>
+      <p class="label">Rendered</p>
+      <div id="beam-render" class="render-box"></div>
+    </div>
+  </div>
+</section>
+
+<script src="{{ url_for('static', filename='js/recognize.js') }}"></script>
+{% endblock %}

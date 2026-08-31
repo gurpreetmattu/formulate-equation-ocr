@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Examples{% endblock %}
+{% block content %}
+<h1>Example Equations &amp; Results</h1>
+<p class="subtitle">A gallery of sample inputs with model predictions compared against ground truth.</p>
+
+{% if load_error %}
+<div class="banner banner-error"><strong>Model unavailable:</strong> {{ load_error }}</div>
+{% endif %}
+{% if warning %}
+<div class="banner banner-warn">{{ warning }}</div>
+{% endif %}
+
+{% for ex in examples %}
+<section class="card">
+  <h2>{{ ex.desc }}</h2>
+  {% if ex.error %}
+    <div class="banner banner-error">{{ ex.error }}</div>
+  {% else %}
+    <img src="{{ ex.preview_image }}" alt="{{ ex.filename }}" class="preview-img">
+    <p class="label">Ground Truth LaTeX</p>
+    <pre class="code-block">{{ ex.ground_truth }}</pre>
+    <div class="grid-2">
+      <div>
+        <h3>Greedy</h3>
+        <p class="label">LaTeX</p>
+        <pre class="code-block">{{ ex.greedy_latex }}</pre>
+        <p class="label">MathML</p>
+        <pre class="code-block">{{ ex.greedy_mathml }}</pre>
+        <p class="label">Rendered</p>
+        <div class="render-box">\[{{ ex.greedy_latex }}\]</div>
+      </div>
+      <div>
+        <h3>Beam Search</h3>
+        <p class="label">LaTeX</p>
+        <pre class="code-block">{{ ex.beam_latex }}</pre>
+        <p class="label">MathML</p>
+        <pre class="code-block">{{ ex.beam_mathml }}</pre>
+        <p class="label">Rendered</p>
+        <div class="render-box">\[{{ ex.beam_latex }}\]</div>
+      </div>
+    </div>
+  {% endif %}
+</section>
+{% else %}
+<p class="hint">No examples available.</p>
+{% endfor %}
+{% endblock %}

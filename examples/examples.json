@@ -1,0 +1,11 @@
+{
+  "1.png": {
+    "latex": "\\frac { \\partial } { \\partial \\theta } I m I ^ { \\prime } = - \\pi \\int _ { 0 } ^ { 1 } d x \\delta ( B ) \\frac { \\partial B } { \\partial \\theta } = \\frac { - 2 \\pi \\theta p _ { 0 } ^ { 2 } } { 2 a s ^ { \\prime } } \\int d y ( \\frac { 1 } { 4 } - y ^ { 2 } ) \\{ \\delta ( y - a ) + \\delta ( y + a ) \\}"
+  },
+  "2.png": {
+    "latex": "S = 4 \\pi M ^ { 2 } \\biggl ( 1 + \\lambda \\frac { 1 } { M ^ { 2 } } + \\lambda ^ { 2 } \\frac { 7 3 } { 1 2 0 } \\frac { 1 } { M ^ { 4 } } \\biggr ) ."
+  },
+  "3.png": {
+    "latex": "M _ { \\mathrm { t o t } } = \\sqrt { M _ { F S } ^ { 2 } + M _ { D 5 } ^ { 2 } } ."
+  }
+}

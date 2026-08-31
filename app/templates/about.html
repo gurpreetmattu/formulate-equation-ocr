@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}About{% endblock %}
+{% block content %}
+<h1>About This Project</h1>
+<section class="card">
+<h2>Automated Printed Equation Recognition &amp; LaTeX/MathML Conversion from Images</h2>
+<p>This application converts images of printed mathematical equations into LaTeX and MathML using a
+custom deep learning pipeline, so they can be reused in LaTeX papers, Word documents, and web pages.</p>
+
+<h3>Key Features</h3>
+<ul>
+  <li>End-to-end OCR: image &rarr; LaTeX &amp; MathML</li>
+  <li>Dual decoding: Greedy and Beam Search outputs shown side by side</li>
+  <li>Visual comparison against the preprocessed input image</li>
+  <li>Example gallery with ground-truth comparisons</li>
+</ul>
+
+<h3>Technical Highlights</h3>
+<ul>
+  <li><strong>Model architecture:</strong> LWDSC-SA (lightweight depthwise-separable conv + spatial attention) encoder &rarr; BiLSTM sequence model &rarr; Luong-attention LSTM decoder</li>
+  <li><strong>Dataset:</strong> im2latex-100k</li>
+  <li><strong>Preprocessing:</strong> adaptive cropping, contrast/sharpness enhancement, Otsu binarization, fixed-size resize</li>
+  <li><strong>Conversion pipeline:</strong> Image &rarr; LaTeX (deep learning) &rarr; MathML (<code>latex2mathml</code>)</li>
+</ul>
+
+<h3>Limitations</h3>
+<ul>
+  <li>Best on high-quality scans of printed (not handwritten) equations</li>
+  <li>May require post-editing for deeply nested or unusual formulas</li>
+</ul>
+
+<h3>Acknowledgments</h3>
+<p>Inspired by Mathpix, im2latex, and the PyTorch/Flask communities.</p>
+</section>
+{% endblock %}

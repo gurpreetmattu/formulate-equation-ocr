@@ -1,0 +1,16 @@
+# Runtime dependencies for the Flask inference application.
+#
+# torch is pinned to a version confirmed to (a) support weights_only=True
+# safe deserialization and (b) load full_checkpoint.pt's plain state_dicts
+# without any custom pickled classes. For local CPU development, this
+# resolves the default CPU wheel from PyPI. For GPU (CUDA) environments,
+# install the matching CUDA wheel per https://pytorch.org/get-started/locally/
+# BEFORE installing this file, or use the provided Dockerfile which pulls
+# an official CUDA-enabled PyTorch base image.
+torch==2.4.1
+numpy==1.26.4
+opencv-python-headless==4.10.0.84
+Pillow==10.4.0
+latex2mathml==3.77.0
+Flask==3.0.3
+gunicorn==22.0.0
