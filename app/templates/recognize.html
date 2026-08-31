@@ -1,50 +1,133 @@
 {% extends "base.html" %}
-{% block title %}Recognize an Equation{% endblock %}
+{% block title %}Recognize an Equation &middot; Equation OCR{% endblock %}
 {% block content %}
-<h1>Automated Printed Equation Recognition</h1>
-<p class="subtitle">Upload an image of a printed math equation to get LaTeX and MathML output.</p>
+<div class="hero">
+  <span class="eyebrow">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" fill="currentColor"/></svg>
+    Deep learning OCR
+  </span>
+  <h1>Turn a printed equation into LaTeX &amp; MathML</h1>
+  <p class="subtitle">Upload a scan or photo of a printed math equation. The model recognizes it and returns editable LaTeX and MathML, ready to paste into a paper, doc, or web page.</p>
+</div>
 
 {% if load_error %}
 <div class="banner banner-error">
-  <strong>Model unavailable:</strong> {{ load_error }}
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 8v5M12 16h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+  <div><strong>Model unavailable.</strong> {{ load_error }}</div>
 </div>
 {% endif %}
 
 <section class="card">
-  <h2>1. Upload an image</h2>
-  <p class="hint">Accepted formats: PNG, JPG, JPEG, BMP, TIFF. Best results with clear, cropped, high-contrast scans of printed equations.</p>
+  <span class="step-label"><span class="step-index">1</span>Upload an image</span>
   <form id="predict-form">
-    <input type="file" id="image-input" name="image" accept=".png,.jpg,.jpeg,.bmp,.tiff,.tif" required {{ 'disabled' if load_error }}>
-    <button type="submit" id="submit-btn" {{ 'disabled' if load_error }}>Recognize</button>
+    <label for="image-input" class="dropzone" id="dropzone">
+      <input type="file" id="image-input" name="image" accept=".png,.jpg,.jpeg,.bmp,.tiff,.tif" hidden required {{ 'disabled' if load_error }}>
+      <div id="dz-empty">
+        <div class="dz-icon">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M12 16V4M12 4 7 9M12 4l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="dz-title">Drag &amp; drop an equation image, or click to browse</div>
+        <div class="dz-hint">PNG, JPG, JPEG, BMP or TIFF &middot; clear, cropped, high-contrast scans work best</div>
+      </div>
+      <div id="dz-file" class="dz-preview-row" hidden>
+        <img id="dz-thumb" class="dz-thumb" alt="Selected image preview">
+        <div class="dz-file-meta">
+          <div class="dz-file-name" id="dz-file-name"></div>
+          <div class="dz-file-sub" id="dz-file-size"></div>
+        </div>
+        <button type="button" class="btn btn-ghost dz-clear" id="dz-clear">Change</button>
+      </div>
+    </label>
+    <button type="submit" id="submit-btn" class="btn btn-primary btn-block" disabled>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" fill="currentColor"/></svg>
+      Recognize equation
+    </button>
   </form>
-  <div id="empty-state" class="hint">No image selected yet.</div>
-  <div id="loading-state" class="hint" hidden>Running inference&hellip;</div>
+  <div class="state-row" id="loading-state" hidden>
+    <span class="spinner"></span>
+    Analyzing equation&hellip; greedy and beam-search decoding both run on CPU, this can take a few seconds.
+  </div>
   <div id="error-state" class="banner banner-error" hidden></div>
 </section>
 
-<section class="card" id="results" hidden>
-  <h2>2. Preprocessed input</h2>
-  <img id="preview-img" alt="Preprocessed equation" class="preview-img">
+<section id="results" hidden>
+  <div class="card">
+    <span class="step-label"><span class="step-index">2</span>Preprocessed input</span>
+    <img id="preview-img" alt="Preprocessed equation" class="preview-img">
+  </div>
 
-  <h2>3. Model outputs</h2>
+  <span class="step-label"><span class="step-index">3</span>Model outputs</span>
   <div class="grid-2">
-    <div>
-      <h3>Greedy Decoding</h3>
-      <p class="label">LaTeX</p>
-      <pre id="greedy-latex" class="code-block"></pre>
-      <p class="label">MathML</p>
-      <pre id="greedy-mathml" class="code-block"></pre>
-      <p class="label">Rendered</p>
-      <div id="greedy-render" class="render-box"></div>
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-icon greedy">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" fill="currentColor"/></svg>
+        </span>
+        <div>
+          <div class="panel-title">Greedy decoding</div>
+          <div class="panel-sub">Fastest — picks the top token at each step</div>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div>
+          <p class="label">LaTeX</p>
+          <div class="code-row">
+            <pre id="greedy-latex" class="code-block"></pre>
+            <button type="button" class="btn-icon copy-btn" data-target="greedy-latex" title="Copy LaTeX">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M5 15V5a2 2 0 0 1 2-2h10" stroke="currentColor" stroke-width="1.6"/></svg>
+            </button>
+          </div>
+        </div>
+        <div>
+          <p class="label">MathML</p>
+          <div class="code-row">
+            <pre id="greedy-mathml" class="code-block"></pre>
+            <button type="button" class="btn-icon copy-btn" data-target="greedy-mathml" title="Copy MathML">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M5 15V5a2 2 0 0 1 2-2h10" stroke="currentColor" stroke-width="1.6"/></svg>
+            </button>
+          </div>
+        </div>
+        <div>
+          <p class="label">Rendered</p>
+          <div id="greedy-render" class="render-box"></div>
+        </div>
+      </div>
     </div>
-    <div>
-      <h3>Beam Search Decoding</h3>
-      <p class="label">LaTeX</p>
-      <pre id="beam-latex" class="code-block"></pre>
-      <p class="label">MathML</p>
-      <pre id="beam-mathml" class="code-block"></pre>
-      <p class="label">Rendered</p>
-      <div id="beam-render" class="render-box"></div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-icon beam">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2 3 7l9 5 9-5-9-5zM3 12l9 5 9-5M3 17l9 5 9-5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        </span>
+        <div>
+          <div class="panel-title">Beam search</div>
+          <div class="panel-sub">Explores multiple candidates — usually more accurate</div>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div>
+          <p class="label">LaTeX</p>
+          <div class="code-row">
+            <pre id="beam-latex" class="code-block"></pre>
+            <button type="button" class="btn-icon copy-btn" data-target="beam-latex" title="Copy LaTeX">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M5 15V5a2 2 0 0 1 2-2h10" stroke="currentColor" stroke-width="1.6"/></svg>
+            </button>
+          </div>
+        </div>
+        <div>
+          <p class="label">MathML</p>
+          <div class="code-row">
+            <pre id="beam-mathml" class="code-block"></pre>
+            <button type="button" class="btn-icon copy-btn" data-target="beam-mathml" title="Copy MathML">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M5 15V5a2 2 0 0 1 2-2h10" stroke="currentColor" stroke-width="1.6"/></svg>
+            </button>
+          </div>
+        </div>
+        <div>
+          <p class="label">Rendered</p>
+          <div id="beam-render" class="render-box"></div>
+        </div>
+      </div>
     </div>
   </div>
 </section>

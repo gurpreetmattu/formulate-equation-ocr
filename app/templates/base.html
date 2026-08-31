@@ -3,24 +3,35 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{% block title %}Equation Recognition{% endblock %}</title>
+<meta name="description" content="Convert images of printed math equations into LaTeX and MathML using a deep learning OCR pipeline.">
+<title>{% block title %}Equation OCR{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js" defer></script>
 </head>
 <body>
-<nav class="topnav">
-  <div class="brand">Equation OCR</div>
-  <div class="links">
-    <a href="{{ url_for('routes.recognize_page') }}">Recognize</a>
-    <a href="{{ url_for('routes.examples_page') }}">Examples</a>
-    <a href="{{ url_for('routes.about_page') }}">About</a>
+<nav class="navbar">
+  <a class="brand" href="{{ url_for('routes.recognize_page') }}">
+    <span class="brand-mark">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 4h8M8 20h8M9 4c0 4-3 5-3 8s3 4 3 8M15 4c0 4 3 5 3 8s-3 4-3 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </span>
+    Equation OCR
+  </a>
+  <div class="nav-links">
+    <a href="{{ url_for('routes.recognize_page') }}" class="{{ 'active' if request.endpoint in ('routes.recognize_page',) else '' }}">Recognize</a>
+    <a href="{{ url_for('routes.examples_page') }}" class="{{ 'active' if request.endpoint == 'routes.examples_page' else '' }}">Examples</a>
+    <a href="{{ url_for('routes.about_page') }}" class="{{ 'active' if request.endpoint == 'routes.about_page' else '' }}">About</a>
   </div>
 </nav>
 <main class="container">
   {% block content %}{% endblock %}
 </main>
 <footer>
-  <p>Automated Printed Equation Recognition &amp; LaTeX/MathML Conversion &middot; academic project</p>
+  Automated Printed Equation Recognition &amp; LaTeX/MathML Conversion &middot; academic project
 </footer>
 </body>
 </html>

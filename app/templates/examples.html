@@ -1,43 +1,89 @@
 {% extends "base.html" %}
-{% block title %}Examples{% endblock %}
+{% block title %}Examples &middot; Equation OCR{% endblock %}
 {% block content %}
-<h1>Example Equations &amp; Results</h1>
-<p class="subtitle">A gallery of sample inputs with model predictions compared against ground truth.</p>
+<div class="hero">
+  <span class="eyebrow">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/></svg>
+    Example gallery
+  </span>
+  <h1>Example equations &amp; results</h1>
+  <p class="subtitle">A handful of sample inputs run through the model at page load, with predictions shown next to ground truth.</p>
+</div>
 
 {% if load_error %}
-<div class="banner banner-error"><strong>Model unavailable:</strong> {{ load_error }}</div>
+<div class="banner banner-error">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 8v5M12 16h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+  <div><strong>Model unavailable.</strong> {{ load_error }}</div>
+</div>
 {% endif %}
 {% if warning %}
 <div class="banner banner-warn">{{ warning }}</div>
 {% endif %}
 
+<div class="example-grid">
 {% for ex in examples %}
 <section class="card">
-  <h2>{{ ex.desc }}</h2>
+  <div class="example-card-header">
+    <h2 style="margin:0;">{{ ex.desc }}</h2>
+    {% if not ex.error %}<span class="badge badge-neutral">Inference complete</span>{% endif %}
+  </div>
+
   {% if ex.error %}
-    <div class="banner banner-error">{{ ex.error }}</div>
+    <div class="banner banner-error">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 8v5M12 16h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <div>{{ ex.error }}</div>
+    </div>
   {% else %}
-    <img src="{{ ex.preview_image }}" alt="{{ ex.filename }}" class="preview-img">
-    <p class="label">Ground Truth LaTeX</p>
-    <pre class="code-block">{{ ex.ground_truth }}</pre>
+    <img src="{{ ex.preview_image }}" alt="{{ ex.filename }}" class="preview-img" style="margin-bottom: var(--space-4);">
+
+    <p class="label">Ground truth LaTeX</p>
+    <pre class="code-block" style="margin-bottom: var(--space-4);">{{ ex.ground_truth }}</pre>
+
     <div class="grid-2">
-      <div>
-        <h3>Greedy</h3>
-        <p class="label">LaTeX</p>
-        <pre class="code-block">{{ ex.greedy_latex }}</pre>
-        <p class="label">MathML</p>
-        <pre class="code-block">{{ ex.greedy_mathml }}</pre>
-        <p class="label">Rendered</p>
-        <div class="render-box">\[{{ ex.greedy_latex }}\]</div>
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-icon greedy">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" fill="currentColor"/></svg>
+          </span>
+          <div class="panel-title">Greedy</div>
+        </div>
+        <div class="panel-body">
+          <div>
+            <p class="label">LaTeX</p>
+            <pre class="code-block">{{ ex.greedy_latex }}</pre>
+          </div>
+          <div>
+            <p class="label">MathML</p>
+            <pre class="code-block">{{ ex.greedy_mathml }}</pre>
+          </div>
+          <div>
+            <p class="label">Rendered</p>
+            <div class="render-box">\[{{ ex.greedy_latex }}\]</div>
+          </div>
+        </div>
       </div>
-      <div>
-        <h3>Beam Search</h3>
-        <p class="label">LaTeX</p>
-        <pre class="code-block">{{ ex.beam_latex }}</pre>
-        <p class="label">MathML</p>
-        <pre class="code-block">{{ ex.beam_mathml }}</pre>
-        <p class="label">Rendered</p>
-        <div class="render-box">\[{{ ex.beam_latex }}\]</div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-icon beam">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2 3 7l9 5 9-5-9-5zM3 12l9 5 9-5M3 17l9 5 9-5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          </span>
+          <div class="panel-title">Beam search</div>
+        </div>
+        <div class="panel-body">
+          <div>
+            <p class="label">LaTeX</p>
+            <pre class="code-block">{{ ex.beam_latex }}</pre>
+          </div>
+          <div>
+            <p class="label">MathML</p>
+            <pre class="code-block">{{ ex.beam_mathml }}</pre>
+          </div>
+          <div>
+            <p class="label">Rendered</p>
+            <div class="render-box">\[{{ ex.beam_latex }}\]</div>
+          </div>
+        </div>
       </div>
     </div>
   {% endif %}
@@ -45,4 +91,5 @@
 {% else %}
 <p class="hint">No examples available.</p>
 {% endfor %}
+</div>
 {% endblock %}

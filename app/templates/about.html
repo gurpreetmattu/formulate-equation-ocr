@@ -1,35 +1,90 @@
 {% extends "base.html" %}
-{% block title %}About{% endblock %}
+{% block title %}About &middot; Equation OCR{% endblock %}
 {% block content %}
-<h1>About This Project</h1>
+<div class="hero">
+  <span class="eyebrow">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    About
+  </span>
+  <h1>Automated printed equation recognition</h1>
+  <p class="subtitle">A deep learning pipeline that converts images of printed math equations into LaTeX and MathML, so they can be reused in papers, documents, and web pages.</p>
+</div>
+
 <section class="card">
-<h2>Automated Printed Equation Recognition &amp; LaTeX/MathML Conversion from Images</h2>
-<p>This application converts images of printed mathematical equations into LaTeX and MathML using a
-custom deep learning pipeline, so they can be reused in LaTeX papers, Word documents, and web pages.</p>
+  <h2>How it works</h2>
+  <div class="pipeline">
+    <div class="pipeline-step">
+      <span class="pipeline-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.6"/><circle cx="9" cy="10" r="1.6" fill="currentColor"/><path d="M21 16l-5-5-9 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <span class="pipeline-label">Image</span>
+    </div>
+    <div class="pipeline-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="pipeline-step">
+      <span class="pipeline-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 12h4l3-8 4 16 3-8h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <span class="pipeline-label">Preprocess</span>
+    </div>
+    <div class="pipeline-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="pipeline-step">
+      <span class="pipeline-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/></svg></span>
+      <span class="pipeline-label">LWDSC-SA Encoder</span>
+    </div>
+    <div class="pipeline-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="pipeline-step">
+      <span class="pipeline-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2 3 7l9 5 9-5-9-5zM3 12l9 5 9-5M3 17l9 5 9-5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
+      <span class="pipeline-label">BiLSTM + Attention Decoder</span>
+    </div>
+    <div class="pipeline-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="pipeline-step">
+      <span class="pipeline-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M8 4h8M8 20h8M9 4c0 4-3 5-3 8s3 4 3 8M15 4c0 4 3 5 3 8s-3 4-3 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <span class="pipeline-label">LaTeX + MathML</span>
+    </div>
+  </div>
+  <p class="hint">Greedy and beam-search decoding both run on the same encoded image and are shown side by side, since beam search is usually more accurate but greedy is faster.</p>
+</section>
 
-<h3>Key Features</h3>
-<ul>
-  <li>End-to-end OCR: image &rarr; LaTeX &amp; MathML</li>
-  <li>Dual decoding: Greedy and Beam Search outputs shown side by side</li>
-  <li>Visual comparison against the preprocessed input image</li>
-  <li>Example gallery with ground-truth comparisons</li>
-</ul>
+<section class="card">
+  <h2>Key features</h2>
+  <ul class="feature-list">
+    <li>
+      <span class="feat-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <div><strong>End-to-end OCR</strong> — image in, editable LaTeX and MathML out.</div>
+    </li>
+    <li>
+      <span class="feat-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <div><strong>Dual decoding</strong> — greedy and beam search results shown together for comparison.</div>
+    </li>
+    <li>
+      <span class="feat-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <div><strong>Visual verification</strong> — the preprocessed input and rendered LaTeX are shown alongside the raw output.</div>
+    </li>
+    <li>
+      <span class="feat-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <div><strong>Example gallery</strong> — sample equations compared against ground truth.</div>
+    </li>
+  </ul>
 
-<h3>Technical Highlights</h3>
-<ul>
-  <li><strong>Model architecture:</strong> LWDSC-SA (lightweight depthwise-separable conv + spatial attention) encoder &rarr; BiLSTM sequence model &rarr; Luong-attention LSTM decoder</li>
-  <li><strong>Dataset:</strong> im2latex-100k</li>
-  <li><strong>Preprocessing:</strong> adaptive cropping, contrast/sharpness enhancement, Otsu binarization, fixed-size resize</li>
-  <li><strong>Conversion pipeline:</strong> Image &rarr; LaTeX (deep learning) &rarr; MathML (<code>latex2mathml</code>)</li>
-</ul>
+  <h2>Technology</h2>
+  <div class="pill-row">
+    <span class="pill">Python</span>
+    <span class="pill">PyTorch</span>
+    <span class="pill">OpenCV</span>
+    <span class="pill">Flask</span>
+    <span class="pill">latex2mathml</span>
+    <span class="pill">Docker</span>
+    <span class="pill">Google Cloud Run</span>
+  </div>
 
-<h3>Limitations</h3>
-<ul>
-  <li>Best on high-quality scans of printed (not handwritten) equations</li>
-  <li>May require post-editing for deeply nested or unusual formulas</li>
-</ul>
+  <h2>Limitations</h2>
+  <ul class="feature-list">
+    <li>
+      <span class="feat-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 8v5M12 16h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+      <div>Best on high-quality scans of printed (not handwritten) equations.</div>
+    </li>
+    <li>
+      <span class="feat-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 8v5M12 16h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+      <div>May require post-editing for deeply nested or unusual formulas.</div>
+    </li>
+  </ul>
 
-<h3>Acknowledgments</h3>
-<p>Inspired by Mathpix, im2latex, and the PyTorch/Flask communities.</p>
+  <p class="hint">Dataset: im2latex-100k. Inspired by Mathpix, im2latex, and the PyTorch/Flask communities.</p>
 </section>
 {% endblock %}
