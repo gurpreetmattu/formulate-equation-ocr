@@ -22,12 +22,16 @@ logger = logging.getLogger(__name__)
 
 # Content-Security-Policy scoped to what this app actually loads: itself,
 # MathJax from cdnjs, and the Inter font from Google Fonts. No wildcards.
+# img-src needs blob: in addition to 'self'/data: because the upload
+# dropzone previews the selected file via URL.createObjectURL() (both a
+# real <input type=file> selection and the quick-start sample chips,
+# which fetch an image and hand it through the same preview path).
 _CSP = (
     "default-src 'self'; "
     "script-src 'self' https://cdnjs.cloudflare.com; "
     "style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; "
     "font-src https://fonts.gstatic.com; "
-    "img-src 'self' data:; "
+    "img-src 'self' data: blob:; "
     "connect-src 'self'"
 )
 
