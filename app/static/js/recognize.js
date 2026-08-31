@@ -11,9 +11,59 @@ document.addEventListener("DOMContentLoaded", () => {
   const submitBtn = document.getElementById("submit-btn");
   const loadingState = document.getElementById("loading-state");
   const errorState = document.getElementById("error-state");
+  const previewSection = document.getElementById("preview-section");
   const results = document.getElementById("results");
 
   if (!form) return;
+
+  function escapeHtml(str) {
+    return str.replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+    }[c]));
+  }
+
+  // Simple LCS-based token diff: returns the beam tokens as an array of
+  // {text, changed} so differing tokens (insert/replace relative to greedy)
+  // can be highlighted. Tokens are space-separated, matching how the
+  // model's vocabulary is joined server-side (see tokens_to_latex).
+  function diffTokens(greedyLatex, beamLatex) {
+    const a = greedyLatex.split(" ");
+    const b = beamLatex.split(" ");
+    const n = a.length, m = b.length;
+    const lcs = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+    for (let i = n - 1; i >= 0; i--) {
+      for (let j = m - 1; j >= 0; j--) {
+        lcs[i][j] = a[i] === b[j] ? lcs[i + 1][j + 1] + 1 : Math.max(lcs[i + 1][j], lcs[i][j + 1]);
+      }
+    }
+    const result = [];
+    let i = 0, j = 0;
+    while (j < m) {
+      if (i < n && a[i] === b[j]) {
+        result.push({ text: b[j], changed: false });
+        i++; j++;
+      } else if (i < n && lcs[i + 1][j] >= lcs[i][j + 1]) {
+        i++;
+      } else {
+        result.push({ text: b[j], changed: true });
+        j++;
+      }
+    }
+    return result;
+  }
+
+  function renderBeamWithDiff(greedyLatex, beamLatex) {
+    const target = document.getElementById("beam-latex");
+    const looksLikeError = (s) => s.startsWith("[Prediction error") || s.startsWith("[Conversion error");
+    if (!greedyLatex || !beamLatex || looksLikeError(greedyLatex) || looksLikeError(beamLatex)) {
+      target.textContent = beamLatex;
+      return;
+    }
+    const tokens = diffTokens(greedyLatex, beamLatex);
+    target.innerHTML = tokens
+      .map((t) => (t.changed ? `<span class="diff-token">${escapeHtml(t.text)}</span>` : escapeHtml(t.text)))
+      .join(" ");
+  }
 
   function formatBytes(bytes) {
     if (bytes < 1024) return bytes + " B";
@@ -41,6 +91,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   fileInput.addEventListener("change", () => {
     if (fileInput.files.length) showSelectedFile(fileInput.files[0]);
+  });
+
+  // The native <label for="..."> click-to-open behavior only fires on
+  // pointer clicks, and the file input itself is `hidden` so it can never
+  // receive keyboard focus. Make the dropzone a keyboard-operable button.
+  dropzone.addEventListener("keydown", (e) => {
+    if ((e.key === "Enter" || e.key === " ") && !fileInput.disabled) {
+      e.preventDefault();
+      fileInput.click();
+    }
   });
 
   dzClear.addEventListener("click", (e) => {
@@ -95,6 +155,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!fileInput.files.length) return;
 
     errorState.hidden = true;
+    previewSection.hidden = true;
     results.hidden = true;
     loadingState.hidden = false;
     submitBtn.disabled = true;
@@ -113,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("preview-img").src = data.preview_image;
       document.getElementById("greedy-latex").textContent = data.greedy_latex;
       document.getElementById("greedy-mathml").textContent = data.greedy_mathml;
-      document.getElementById("beam-latex").textContent = data.beam_latex;
+      renderBeamWithDiff(data.greedy_latex, data.beam_latex);
       document.getElementById("beam-mathml").textContent = data.beam_mathml;
 
       const greedyRender = document.getElementById("greedy-render");
@@ -121,6 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
       greedyRender.textContent = "\\[" + data.greedy_latex + "\\]";
       beamRender.textContent = "\\[" + data.beam_latex + "\\]";
 
+      previewSection.hidden = false;
       results.hidden = false;
       if (window.MathJax && window.MathJax.typesetPromise) {
         window.MathJax.typesetPromise([greedyRender, beamRender]);

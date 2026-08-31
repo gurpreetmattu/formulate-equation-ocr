@@ -1,25 +1,26 @@
 :root {
-  --bg: #f6f7fb;
+  /* Light pastel lavender/indigo -- the primary, designed-for theme */
+  --bg: #fbfaff;
   --bg-elevated: #ffffff;
   --card-bg: #ffffff;
-  --text: #14171f;
-  --text-strong: #0b0d12;
-  --muted: #656d7a;
-  --muted-2: #8990a0;
-  --accent: #4f46e5;
-  --accent-hover: #4338ca;
-  --accent-soft: #eef0ff;
+  --text: #241f38;
+  --text-strong: #16112a;
+  --muted: #6f6789;
+  --muted-2: #8d84a8;
+  --accent: #6f63e0;
+  --accent-hover: #5b4fd1;
+  --accent-soft: #efebfd;
   --accent-contrast: #ffffff;
-  --success: #0f9d58;
-  --success-soft: #e6f7ee;
-  --danger: #d93025;
-  --danger-soft: #fdecea;
-  --warn: #b06a00;
-  --warn-soft: #fff6e0;
-  --border: #e5e7ef;
-  --border-strong: #d3d7e3;
-  --code-bg: #f1f2f8;
-  --code-text: #2b2f3a;
+  --success: #1f9d6f;
+  --success-soft: #e5f8ef;
+  --danger: #c94b63;
+  --danger-soft: #fdebef;
+  --warn: #b9791e;
+  --warn-soft: #fdf1de;
+  --border: #ece9f7;
+  --border-strong: #d9d4ee;
+  --code-bg: #f5f2fc;
+  --code-text: #362f52;
 
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -35,37 +36,39 @@
   --radius-lg: 20px;
   --radius-pill: 999px;
 
-  --shadow-sm: 0 1px 2px rgba(20, 23, 31, 0.05), 0 1px 1px rgba(20, 23, 31, 0.04);
-  --shadow-md: 0 8px 24px rgba(20, 23, 31, 0.08), 0 2px 6px rgba(20, 23, 31, 0.04);
+  --shadow-sm: 0 1px 2px rgba(80, 60, 140, 0.06), 0 1px 1px rgba(80, 60, 140, 0.04);
+  --shadow-md: 0 8px 24px rgba(80, 60, 140, 0.1), 0 2px 6px rgba(80, 60, 140, 0.05);
   --shadow-focus: 0 0 0 3px var(--accent-soft);
 
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: "SFMono-Regular", ui-monospace, Menlo, Consolas, "Liberation Mono", monospace;
 }
 
+/* Dark theme kept for prefers-color-scheme, recolored to the same violet
+   accent family as the light theme -- secondary to the light pastel look. */
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0c0d11;
-    --bg-elevated: #14161c;
-    --card-bg: #14161c;
-    --text: #e7e9ee;
+    --bg: #131120;
+    --bg-elevated: #1c1930;
+    --card-bg: #1c1930;
+    --text: #e9e6f7;
     --text-strong: #ffffff;
-    --muted: #9aa1b0;
-    --muted-2: #757c8a;
-    --accent: #8b85f5;
-    --accent-hover: #a29cff;
-    --accent-soft: #201f3d;
-    --accent-contrast: #0c0d11;
-    --success: #4ade80;
-    --success-soft: #12261c;
-    --danger: #ff8a80;
-    --danger-soft: #2c1517;
-    --warn: #f0c674;
-    --warn-soft: #2b2312;
-    --border: #23262f;
-    --border-strong: #2f333e;
-    --code-bg: #191c24;
-    --code-text: #d6d9e2;
+    --muted: #a79fc7;
+    --muted-2: #8a81ab;
+    --accent: #a99cff;
+    --accent-hover: #bcb0ff;
+    --accent-soft: #2b2547;
+    --accent-contrast: #16112a;
+    --success: #6fe0af;
+    --success-soft: #16301f;
+    --danger: #ff9bad;
+    --danger-soft: #391a26;
+    --warn: #f3c778;
+    --warn-soft: #372a10;
+    --border: #2c2745;
+    --border-strong: #3a3456;
+    --code-bg: #211c38;
+    --code-text: #ded9f2;
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.45);
     --shadow-focus: 0 0 0 3px var(--accent-soft);
@@ -75,6 +78,12 @@
 * { box-sizing: border-box; }
 
 [hidden] { display: none !important; }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
 
 html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
 
@@ -248,15 +257,26 @@ h3 {
 .hint { color: var(--muted); font-size: 0.88rem; }
 .label { font-weight: 600; font-size: 0.85rem; color: var(--muted-2); margin-bottom: var(--space-1); }
 
-.grid-2 {
+/* Two-column layout for the Recognize page: upload stays visible on the
+   left while results appear on the right, instead of a long single-column
+   scroll. Collapses to a single stacked column on narrower viewports. */
+.recognize-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-4);
+  grid-template-columns: 380px 1fr;
+  gap: var(--space-6);
+  align-items: start;
   min-width: 0;
 }
-.grid-2 > * { min-width: 0; }
-@media (max-width: 680px) {
-  .grid-2 { grid-template-columns: 1fr; }
+.recognize-layout > .recognize-left { min-width: 0; }
+.recognize-layout > .recognize-right { min-width: 0; }
+@media (min-width: 961px) {
+  .recognize-left {
+    position: sticky;
+    top: calc(64px + var(--space-5));
+  }
+}
+@media (max-width: 960px) {
+  .recognize-layout { grid-template-columns: 1fr; }
 }
 
 /* ---------- Dropzone ---------- */
@@ -414,6 +434,51 @@ h3 {
 .panel-sub { font-size: 0.78rem; color: var(--muted); }
 
 .panel-body { padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-4); }
+
+/* Primary result panel (beam search): the main answer, more prominent than
+   the secondary/collapsed greedy detail below it. */
+.panel-primary {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-md);
+}
+.panel-primary .panel-header {
+  background: var(--accent-soft);
+  border-bottom-color: var(--accent-soft);
+}
+.panel-primary .panel-icon.beam { background: var(--accent); color: var(--accent-contrast); }
+.panel-primary .panel-title { font-size: 1rem; }
+
+/* Secondary result: collapsed by default via <details>/<summary>. */
+.secondary-toggle {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card-bg);
+  overflow: hidden;
+}
+.secondary-toggle summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  list-style: none;
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+.secondary-toggle summary::-webkit-details-marker { display: none; }
+.secondary-toggle summary:hover { color: var(--text-strong); }
+.secondary-toggle .chevron { transition: transform 0.15s ease; flex-shrink: 0; }
+.secondary-toggle[open] .chevron { transform: rotate(90deg); }
+.secondary-toggle .panel { border: none; border-radius: 0; border-top: 1px solid var(--border); }
+
+/* Token-level diff highlight: marks where beam and greedy decoding diverge. */
+.diff-token {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 4px;
+  padding: 0 2px;
+}
 
 .code-row {
   display: flex;

@@ -39,53 +39,53 @@
     <p class="label">Ground truth LaTeX</p>
     <pre class="code-block" style="margin-bottom: var(--space-4);">{{ ex.ground_truth }}</pre>
 
-    <div class="grid-2">
-      <div class="panel">
-        <div class="panel-header">
-          <span class="panel-icon greedy">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" fill="currentColor"/></svg>
-          </span>
-          <div class="panel-title">Greedy</div>
-        </div>
-        <div class="panel-body">
-          <div>
-            <p class="label">LaTeX</p>
-            <pre class="code-block">{{ ex.greedy_latex }}</pre>
-          </div>
-          <div>
-            <p class="label">MathML</p>
-            <pre class="code-block">{{ ex.greedy_mathml }}</pre>
-          </div>
-          <div>
-            <p class="label">Rendered</p>
-            <div class="render-box">\[{{ ex.greedy_latex }}\]</div>
-          </div>
+    <div class="panel panel-primary" style="margin-bottom: var(--space-4);">
+      <div class="panel-header">
+        <span class="panel-icon beam">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2 3 7l9 5 9-5-9-5zM3 12l9 5 9-5M3 17l9 5 9-5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        </span>
+        <div>
+          <div class="panel-title">Beam search decoding</div>
+          <div class="panel-sub">The primary result &mdash; usually most accurate</div>
         </div>
       </div>
-
-      <div class="panel">
-        <div class="panel-header">
-          <span class="panel-icon beam">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2 3 7l9 5 9-5-9-5zM3 12l9 5 9-5M3 17l9 5 9-5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-          </span>
-          <div class="panel-title">Beam search</div>
+      <div class="panel-body">
+        <div>
+          <p class="label">LaTeX</p>
+          <pre class="code-block">{{ ex.beam_latex }}</pre>
         </div>
-        <div class="panel-body">
-          <div>
-            <p class="label">LaTeX</p>
-            <pre class="code-block">{{ ex.beam_latex }}</pre>
-          </div>
-          <div>
-            <p class="label">MathML</p>
-            <pre class="code-block">{{ ex.beam_mathml }}</pre>
-          </div>
-          <div>
-            <p class="label">Rendered</p>
-            <div class="render-box">\[{{ ex.beam_latex }}\]</div>
-          </div>
+        <div>
+          <p class="label">MathML</p>
+          <pre class="code-block">{{ ex.beam_mathml }}</pre>
+        </div>
+        <div>
+          <p class="label">Rendered</p>
+          <div class="render-box">\[{{ ex.beam_latex }}\]</div>
         </div>
       </div>
     </div>
+
+    <details class="secondary-toggle">
+      <summary>
+        <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" fill="currentColor"/></svg>
+        Also see: greedy decoding
+      </summary>
+      <div class="panel-body">
+        <div>
+          <p class="label">LaTeX</p>
+          <pre class="code-block">{{ ex.greedy_latex }}</pre>
+        </div>
+        <div>
+          <p class="label">MathML</p>
+          <pre class="code-block">{{ ex.greedy_mathml }}</pre>
+        </div>
+        <div>
+          <p class="label">Rendered</p>
+          <div class="render-box">\[{{ ex.greedy_latex }}\]</div>
+        </div>
+      </div>
+    </details>
   {% endif %}
 </section>
 {% else %}
