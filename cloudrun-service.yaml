@@ -1,0 +1,37 @@
+# Reference Cloud Run service definition with GPU (NVIDIA L4) attached.
+# Deploy with: gcloud run services replace cloudrun-service.yaml --region us-central1
+# (build and push the image first, e.g. `gcloud builds submit --tag <image>`).
+#
+# Cloud Run GPU support requires the service to run in a region offering L4 GPUs
+# and a project with GPU quota approved. Adjust image, region, and env vars below.
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: equation-ocr
+  labels:
+    cloud.googleapis.com/location: us-central1
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "3"
+        run.googleapis.com/gpu-type: nvidia-l4
+        run.googleapis.com/gpu-count: "1"
+    spec:
+      containerConcurrency: 8
+      timeoutSeconds: 300
+      containers:
+        - image: REGION-docker.pkg.dev/PROJECT_ID/REPO/equation-ocr:latest
+          ports:
+            - containerPort: 8080
+          resources:
+            limits:
+              cpu: "4"
+              memory: 16Gi
+              nvidia.com/gpu: "1"
+          env:
+            - name: DEVICE
+              value: auto
+            - name: MAX_UPLOAD_MB
+              value: "8"

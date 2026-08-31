@@ -16,7 +16,9 @@ def test_encoder_seq_decoder_forward_shapes():
     vocab_size = 10
     encoder, seq_model, decoder = build_models(vocab_size, Config)
 
-    encoder.eval(); seq_model.eval(); decoder.eval()
+    encoder.eval()
+    seq_model.eval()
+    decoder.eval()
 
     dummy_image = torch.rand(1, 1, Config.IMG_HEIGHT, Config.IMG_WIDTH)
     with torch.no_grad():
