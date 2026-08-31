@@ -2,11 +2,15 @@
 import json
 import os
 
-from flask import Blueprint, Response, current_app, jsonify, render_template, request
+from flask import Blueprint, Response, current_app, jsonify, render_template, request, send_from_directory
 
 from app.deep_learning.preprocessing import PreprocessingError
 
 bp = Blueprint("routes", __name__)
+
+# How many example images to surface as one-click "try a sample" chips on
+# the Recognize page, in examples.json's insertion order.
+QUICK_START_SAMPLE_COUNT = 3
 
 
 def _allowed_file(filename: str) -> bool:
@@ -21,11 +25,34 @@ def _service_or_error():
     return service, None
 
 
+def _load_examples_meta():
+    """Returns (meta_dict, warning). meta_dict is {} if examples.json is missing."""
+    meta_path = os.path.join(current_app.config["EXAMPLES_DIR"], "examples.json")
+    if not os.path.exists(meta_path):
+        return {}, "No example metadata found."
+    with open(meta_path, encoding="utf-8") as f:
+        return json.load(f), None
+
+
 @bp.route("/")
 @bp.route("/recognize")
 def recognize_page():
     _, load_error = _service_or_error()
-    return render_template("recognize.html", load_error=load_error)
+    examples_meta, _warning = _load_examples_meta()
+    samples = [
+        {"filename": fname, "desc": meta.get("desc", fname)}
+        for fname, meta in list(examples_meta.items())[:QUICK_START_SAMPLE_COUNT]
+        if os.path.exists(os.path.join(current_app.config["EXAMPLES_DIR"], fname))
+    ]
+    return render_template("recognize.html", load_error=load_error, samples=samples)
+
+
+@bp.route("/examples/<path:filename>")
+def serve_example_image(filename):
+    examples_meta, _warning = _load_examples_meta()
+    if filename not in examples_meta:
+        return jsonify({"error": "Not found."}), 404
+    return send_from_directory(current_app.config["EXAMPLES_DIR"], filename)
 
 
 @bp.route("/api/predict", methods=["POST"])
@@ -67,14 +94,10 @@ def predict():
 def examples_page():
     service, load_error = _service_or_error()
     examples_dir = current_app.config["EXAMPLES_DIR"]
-    meta_path = os.path.join(examples_dir, "examples.json")
+    examples_meta, warning = _load_examples_meta()
 
-    if not os.path.exists(meta_path):
-        return render_template("examples.html", examples=[], load_error=load_error,
-                                warning="No example metadata found.")
-
-    with open(meta_path, encoding="utf-8") as f:
-        examples_meta = json.load(f)
+    if not examples_meta:
+        return render_template("examples.html", examples=[], load_error=load_error, warning=warning)
 
     from app import encode_preview_png
 

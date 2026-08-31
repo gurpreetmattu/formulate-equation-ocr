@@ -96,3 +96,31 @@ def test_robots_txt(client):
     assert resp.status_code == 200
     assert resp.content_type.startswith("text/plain")
     assert b"User-agent" in resp.data
+
+
+def test_serve_example_image_known_file_returns_image(client):
+    resp = client.get("/examples/1.png")
+    assert resp.status_code == 200
+    assert resp.content_type.startswith("image/")
+
+
+def test_serve_example_image_unknown_file_returns_404(client):
+    resp = client.get("/examples/not-a-real-file.png")
+    assert resp.status_code == 404
+    assert resp.get_json()["error"]
+
+
+def test_recognize_page_includes_sample_chips(client):
+    resp = client.get("/")
+    assert b"sample-chip" in resp.data
+
+
+def test_theme_cookie_reflected_in_html_attribute(client):
+    client.set_cookie("theme", "dark")
+    resp = client.get("/")
+    assert b'data-theme="dark"' in resp.data
+
+
+def test_no_theme_cookie_renders_empty_attribute(client):
+    resp = client.get("/")
+    assert b'data-theme=""' in resp.data

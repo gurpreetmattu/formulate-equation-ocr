@@ -186,8 +186,31 @@ document.addEventListener("DOMContentLoaded", () => {
         await navigator.clipboard.writeText(target.textContent);
         btn.classList.add("is-copied");
         setTimeout(() => btn.classList.remove("is-copied"), 1200);
+        if (window.showToast) window.showToast("Copied to clipboard");
       } catch (err) {
-        /* clipboard API unavailable or denied — silently ignore */
+        if (window.showToast) window.showToast("Could not copy — clipboard access was denied");
+      }
+    });
+  });
+
+  // Quick-start samples: fetch the sample image and feed it through the
+  // exact same validation/preview path as a real upload, so nothing about
+  // the rest of the flow needs to know the file didn't come from disk.
+  document.querySelectorAll(".sample-chip").forEach((chip) => {
+    chip.addEventListener("click", async () => {
+      const filename = chip.dataset.filename;
+      const img = chip.querySelector("img");
+      try {
+        const res = await fetch(img.getAttribute("src"));
+        if (!res.ok) throw new Error("Could not load sample image.");
+        const blob = await res.blob();
+        const file = new File([blob], filename, { type: blob.type || "image/png" });
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        fileInput.files = dt.files;
+        handleFileSelection(file);
+      } catch (err) {
+        showError("Could not load that sample image. Please try uploading your own.");
       }
     });
   });
@@ -241,8 +264,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       previewSection.hidden = false;
       results.hidden = false;
+      const mathjaxNote = document.getElementById("mathjax-fallback-note");
       if (window.MathJax && window.MathJax.typesetPromise) {
+        if (mathjaxNote) mathjaxNote.hidden = true;
         window.MathJax.typesetPromise([greedyRender, beamRender]);
+      } else if (mathjaxNote) {
+        mathjaxNote.hidden = false;
       }
     } catch (err) {
       if (err.name === "AbortError") {

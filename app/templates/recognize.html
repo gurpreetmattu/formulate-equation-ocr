@@ -47,6 +47,19 @@
           Recognize equation
         </button>
       </form>
+
+      {% if samples and not load_error %}
+      <p class="label" style="margin-top: var(--space-4);">Or try a sample</p>
+      <div class="sample-row" id="sample-row">
+        {% for s in samples %}
+        <button type="button" class="sample-chip" data-filename="{{ s.filename }}" title="{{ s.desc }}">
+          <img src="{{ url_for('routes.serve_example_image', filename=s.filename) }}" alt="">
+          {{ s.filename }}
+        </button>
+        {% endfor %}
+      </div>
+      {% endif %}
+
       <div class="state-row" id="loading-state" hidden role="status" aria-live="polite">
         <span class="spinner"></span>
         Analyzing equation&hellip; greedy and beam-search decoding both run on CPU, this can take a few seconds.
@@ -65,6 +78,10 @@
 
     <section id="results" hidden>
       <span class="step-label"><span class="step-index">3</span>Result</span>
+
+      <p class="hint" id="mathjax-fallback-note" hidden style="margin-bottom: var(--space-3);">
+        Formula rendering script failed to load &mdash; showing raw LaTeX above instead of a typeset preview.
+      </p>
 
       <div class="panel panel-primary" style="margin-bottom: var(--space-4);">
         <div class="panel-header">
