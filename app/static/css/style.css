@@ -81,6 +81,10 @@ h1 { margin-bottom: 0.25rem; }
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
+  min-width: 0;
+}
+.grid-2 > div {
+  min-width: 0;
 }
 @media (max-width: 640px) {
   .grid-2 { grid-template-columns: 1fr; }
