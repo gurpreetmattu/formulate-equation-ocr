@@ -247,17 +247,28 @@ See `.env.example` for the full list (`MODEL_PATH`, `VOCAB_PATH`, `DEVICE`,
   (random weights, not the trained checkpoint)
 - `full_checkpoint.pt` loads successfully via `torch.load(..., weights_only=True)`
   on CPU and its keys match the `encoder`/`seq_model`/`decoder` state_dicts expected
-  by `app/deep_learning/model.py` (see validation report in the PR/commit this
-  README ships with for the exact command run)
+  by `app/deep_learning/model.py` (`scripts/verify_checkpoint.py`)
+- **Real end-to-end CPU inference** on an actual example image
+  (`scripts/smoke_test_inference.py`): greedy and beam decoding both ran without
+  error and produced LaTeX matching `examples/examples.json`'s ground truth almost
+  token-for-token
+- **`docker build`** completed successfully against the production `Dockerfile`
+  (CUDA 12.1 base image, CUDA-enabled torch wheel, Gunicorn) — image size ~5.9GB
+- **`docker run`** of that image, on this GPU-less machine: container correctly
+  detected no NVIDIA driver, `DEVICE=auto`/`DEVICE=cpu` fell back to CPU as
+  designed, Gunicorn booted, the model loaded (~10-15s cold start), and
+  `/healthz` plus a real `/api/predict` request (via `curl -F image=@examples/1.png`)
+  both returned correct results identical to the non-Docker CPU run above
 
 **Not verified — requires GPU:**
-- CUDA initialization and `DEVICE=cuda` code path
+- CUDA initialization and `DEVICE=cuda` code path (the container build includes the
+  CUDA-enabled torch wheel, but this machine has no NVIDIA driver to exercise it)
 - GPU model loading and GPU tensor operations
 - Actual inference latency/throughput on GPU
 - GPU memory usage under load
 - Prediction correctness end-to-end on GPU (only CPU-loaded weights were exercised)
 - Cloud Run GPU deployment behavior (cold start timing, concurrency behavior under
-  real GPU load)
+  real GPU load, `--gpu`/`--gpu-type` flags against a real project/quota)
 
 ## Contact
 
