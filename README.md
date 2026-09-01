@@ -336,6 +336,10 @@ that scope rather than a generic checklist:
   above; the Docker image has not been rebuilt/re-run since, so the image-size and
   cold-start figures above predate it.
 
+## License
+
+MIT — see [`LICENSE`](LICENSE).
+
 ## Contact
 
 Lead developer: Gurpreet Singh — gurpreetsinghmattu2002@gmail.com
