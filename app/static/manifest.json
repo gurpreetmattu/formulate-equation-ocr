@@ -1,0 +1,13 @@
+{
+  "name": "Formulate",
+  "short_name": "Formulate",
+  "description": "Convert images of printed math equations into LaTeX and MathML using a deep learning OCR pipeline.",
+  "start_url": "/recognize",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fbfaff",
+  "theme_color": "#6f63e0",
+  "icons": [
+    { "src": "/static/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

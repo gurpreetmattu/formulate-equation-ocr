@@ -1,15 +1,14 @@
 {% extends "base.html" %}
-{% block title %}Page not found &middot; Equation OCR{% endblock %}
+{% block title %}Page not found &middot; Formulate{% endblock %}
 {% block content %}
 <div class="hero">
   <h1>Page not found</h1>
   <p class="subtitle">The page you're looking for doesn't exist or may have moved.</p>
 </div>
 <section class="card">
-  <p class="hint">Try one of these instead:</p>
+  <p class="hint" style="margin-bottom: var(--space-3);">Try one of these instead:</p>
   <div style="display: flex; gap: var(--space-3); flex-wrap: wrap;">
     <a href="{{ url_for('routes.recognize_page') }}" class="btn btn-primary">Recognize an equation</a>
-    <a href="{{ url_for('routes.examples_page') }}" class="btn btn-ghost">Examples</a>
     <a href="{{ url_for('routes.about_page') }}" class="btn btn-ghost">About</a>
   </div>
 </section>

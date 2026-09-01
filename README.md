@@ -101,7 +101,7 @@ app/
 models/                      full_checkpoint.pt, vocab.json (see below)
 training/                    Original training/preprocessing notebooks + data-prep logs
 legacy/                      Original Streamlit prototype, kept for reference only
-examples/                    Sample images + ground truth used by the /examples page
+examples/                    Sample images + ground truth used by the Recognize page's quick-start samples
 tests/                       Pytest suite (see "Running Tests")
 wsgi.py                      Production entrypoint (Gunicorn) / local dev runner
 Dockerfile, .dockerignore    Container build

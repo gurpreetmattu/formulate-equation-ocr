@@ -4,19 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Convert images of printed math equations into LaTeX and MathML using a deep learning OCR pipeline.">
-<title>{% block title %}Equation OCR{% endblock %}</title>
+<title>{% block title %}Formulate{% endblock %}</title>
 
 <link rel="canonical" href="{{ request.base_url }}">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Equation OCR">
-<meta property="og:title" content="{% block og_title %}Equation OCR{% endblock %}">
+<meta property="og:site_name" content="Formulate">
+<meta property="og:title" content="{% block og_title %}Formulate{% endblock %}">
 <meta property="og:description" content="Convert images of printed math equations into LaTeX and MathML using a deep learning OCR pipeline.">
 <meta property="og:url" content="{{ request.base_url }}">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="{% block twitter_title %}Equation OCR{% endblock %}">
+<meta name="twitter:title" content="{% block twitter_title %}Formulate{% endblock %}">
 <meta name="twitter:description" content="Convert images of printed math equations into LaTeX and MathML.">
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%236f63e0'/%3E%3Cpath d='M8 4h8M8 20h8M9 4c0 4-3 5-3 8s3 4 3 8M15 4c0 4 3 5 3 8s-3 4-3 8' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon.svg') }}">
+<link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+<meta name="theme-color" content="#6f63e0">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,12 +36,11 @@
         <path d="M8 4h8M8 20h8M9 4c0 4-3 5-3 8s3 4 3 8M15 4c0 4 3 5 3 8s-3 4-3 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </span>
-    Equation OCR
+    Formulate
   </a>
   <div class="navbar-right">
     <div class="nav-links" id="nav-links">
       <a href="{{ url_for('routes.recognize_page') }}" class="{{ 'active' if request.endpoint in ('routes.recognize_page',) else '' }}">Recognize</a>
-      <a href="{{ url_for('routes.examples_page') }}" class="{{ 'active' if request.endpoint == 'routes.examples_page' else '' }}">Examples</a>
       <a href="{{ url_for('routes.about_page') }}" class="{{ 'active' if request.endpoint == 'routes.about_page' else '' }}">About</a>
     </div>
     <button type="button" id="theme-toggle" class="btn-icon theme-toggle" aria-label="Toggle color theme" title="Toggle color theme">
@@ -54,7 +56,7 @@
   {% block content %}{% endblock %}
 </main>
 <footer>
-  Automated Printed Equation Recognition &amp; LaTeX/MathML Conversion
+  Formulate &mdash; automated printed equation recognition, LaTeX &amp; MathML conversion
 </footer>
 <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 </body>
