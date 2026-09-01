@@ -64,7 +64,25 @@ class EquationRecognizer:
         self.seq_model.eval()
         self.decoder.eval()
 
+        self._validate_input_shape()
+
         logger.info("Model loaded on device=%s vocab_size=%d", self.device, len(self.vocab))
+
+    def _validate_input_shape(self):
+        """Fails loudly at startup if config.IMG_HEIGHT/IMG_WIDTH don't
+        match the shapes this checkpoint was actually trained with (the
+        encoder's feature width is hardcoded into seq_model's input_dim in
+        model.py -- see build_models), instead of surfacing a confusing
+        tensor-shape error on a user's first real request."""
+        try:
+            with torch.no_grad():
+                dummy = torch.zeros(1, 1, self.config.IMG_HEIGHT, self.config.IMG_WIDTH, device=self.device)
+                self._encode(dummy)
+        except Exception as exc:
+            raise ModelLoadError(
+                f"Configured IMG_HEIGHT={self.config.IMG_HEIGHT}/IMG_WIDTH={self.config.IMG_WIDTH} "
+                f"do not match the shapes this checkpoint was trained with: {exc}"
+            ) from exc
 
     def _encode(self, image_tensor: torch.Tensor):
         features = self.encoder(image_tensor.to(self.device))
@@ -96,20 +114,32 @@ class EquationRecognizer:
             c_0 = torch.zeros(1, 1, self.decoder.dec_hidden_dim, device=self.device)
             beams = [([self.sos_token_id], (h_0, c_0), 0.0, False)]
             for _ in range(self.config.MAX_LEN):
-                new_beams = []
-                for tokens, h, score, finished in beams:
-                    if finished:
-                        new_beams.append((tokens, h, score, True))
-                        continue
-                    input_token = torch.tensor([tokens[-1]], dtype=torch.long, device=self.device)
-                    logits, h_new, _ = self.decoder(input_token, h, encoder_outputs)
-                    log_probs = torch.nn.functional.log_softmax(logits, dim=-1).squeeze(0)
-                    topk_log_probs, topk_indices = torch.topk(log_probs, beam_width)
-                    for log_p, idx in zip(topk_log_probs.tolist(), topk_indices.tolist()):
+                active = [b for b in beams if not b[3]]
+                if not active:
+                    break
+                finished = [b for b in beams if b[3]]
+
+                # Run every still-active beam through the decoder in one
+                # batched call instead of one Python-loop call per beam --
+                # the model already supports arbitrary batch size (see
+                # LuongDecoder.forward), decode_beam just wasn't using it.
+                input_tokens = torch.tensor([b[0][-1] for b in active], dtype=torch.long, device=self.device)
+                h_batch = torch.cat([b[1][0] for b in active], dim=1)
+                c_batch = torch.cat([b[1][1] for b in active], dim=1)
+                enc_batch = encoder_outputs.expand(len(active), -1, -1)
+
+                logits, (h_new, c_new), _ = self.decoder(input_tokens, (h_batch, c_batch), enc_batch)
+                log_probs = torch.nn.functional.log_softmax(logits, dim=-1)
+                topk_log_probs, topk_indices = torch.topk(log_probs, beam_width, dim=-1)
+
+                new_beams = list(finished)
+                for i, (tokens, _prev_h, score, _finished) in enumerate(active):
+                    beam_hidden = (h_new[:, i:i + 1, :], c_new[:, i:i + 1, :])
+                    for log_p, idx in zip(topk_log_probs[i].tolist(), topk_indices[i].tolist()):
                         next_tokens = tokens + [idx]
                         next_score = score + log_p
                         next_finished = idx == self.eos_token_id
-                        new_beams.append((next_tokens, h_new, next_score, next_finished))
+                        new_beams.append((next_tokens, beam_hidden, next_score, next_finished))
                 beams = sorted(new_beams, key=lambda b: b[2], reverse=True)[:beam_width]
                 if all(b[3] for b in beams):
                     break

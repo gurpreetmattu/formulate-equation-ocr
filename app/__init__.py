@@ -5,18 +5,18 @@ and stored on the app so every request reuses the same in-memory model
 instead of reloading weights per request (expensive: GPU allocation,
 disk I/O, deserialization).
 """
-import base64
-import io
+import json
 import logging
+import os
 
 from flask import Flask, jsonify, render_template, request
-from PIL import Image
 from werkzeug.exceptions import HTTPException, RequestEntityTooLarge
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from app.config import Config
 from app.deep_learning.inference import EquationRecognizer, ModelLoadError
-from app.services.inference_service import InferenceService
+from app.extensions import limiter
+from app.services.inference_service import InferenceService, encode_preview_png
 
 logger = logging.getLogger(__name__)
 
@@ -36,12 +36,13 @@ _CSP = (
 )
 
 
-def encode_preview_png(image_array) -> str:
-    """Encodes a uint8 ndarray as a base64 PNG data URI for inline <img> use."""
-    pil_img = Image.fromarray(image_array)
-    buf = io.BytesIO()
-    pil_img.save(buf, format="PNG")
-    return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
+def _load_examples_meta(examples_dir):
+    """Returns (meta_dict, warning). meta_dict is {} if examples.json is missing."""
+    meta_path = os.path.join(examples_dir, "examples.json")
+    if not os.path.exists(meta_path):
+        return {}, "No example metadata found."
+    with open(meta_path, encoding="utf-8") as f:
+        return json.load(f), None
 
 
 def create_app(config_class=Config):
@@ -55,6 +56,8 @@ def create_app(config_class=Config):
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
     logging.basicConfig(level=logging.INFO)
+
+    limiter.init_app(app)
 
     @app.after_request
     def _set_security_headers(response):
@@ -81,6 +84,13 @@ def create_app(config_class=Config):
             return jsonify({"error": message}), 413
         return render_template("errors/generic.html", code=413, message=message), 413
 
+    @app.errorhandler(429)
+    def _rate_limited(_exc):
+        message = "Too many requests. Please wait a moment and try again."
+        if _wants_json():
+            return jsonify({"error": message}), 429
+        return render_template("errors/generic.html", code=429, message=message), 429
+
     @app.errorhandler(500)
     @app.errorhandler(Exception)
     def _server_error(exc):
@@ -94,16 +104,23 @@ def create_app(config_class=Config):
         return render_template("errors/generic.html", code=500,
                                 message="Something went wrong on our end."), 500
 
+    app.extensions = getattr(app, "extensions", {})
+
+    # Read once at startup instead of on every request -- the examples/
+    # directory is a static, build-time asset (see Dockerfile), not
+    # something that changes while the process is running.
+    examples_meta, examples_warning = _load_examples_meta(config_class.EXAMPLES_DIR)
+    app.extensions["examples_meta"] = examples_meta
+    app.extensions["examples_warning"] = examples_warning
+
     try:
         recognizer = EquationRecognizer(config_class)
-        app.extensions = getattr(app, "extensions", {})
         app.extensions["inference_service"] = InferenceService(recognizer, config_class)
         app.extensions["model_load_error"] = None
     except ModelLoadError as exc:
         # Fail loudly in logs but let the app boot so health checks / error
         # pages can explain the problem instead of the process crash-looping.
         logger.error("Model failed to load at startup: %s", exc)
-        app.extensions = getattr(app, "extensions", {})
         app.extensions["inference_service"] = None
         app.extensions["model_load_error"] = str(exc)
 

@@ -47,5 +47,11 @@ class Config:
     MAX_CONTENT_LENGTH = int(os.environ.get("MAX_UPLOAD_MB", 8)) * 1024 * 1024
     ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "bmp", "tiff", "tif"}
 
+    # --- Rate limiting ---
+    # /api/predict is CPU/GPU-bound and only 4 threads are available per
+    # worker (see Dockerfile) -- this keeps one client from starving
+    # everyone else. Flask-Limiter string syntax, e.g. "10 per minute".
+    RATE_LIMIT_PREDICT = os.environ.get("RATE_LIMIT_PREDICT", "10 per minute")
+
     # --- Examples gallery ---
     EXAMPLES_DIR = os.environ.get("EXAMPLES_DIR", str(BASE_DIR / "examples"))

@@ -98,7 +98,7 @@ class SequenceModel(nn.Module):
 
 
 class LuongAttention(nn.Module):
-    def __init__(self, hidden_dim):
+    def __init__(self):
         super().__init__()
 
     def forward(self, decoder_hidden, encoder_outputs):
@@ -113,10 +113,9 @@ class LuongDecoder(nn.Module):
         super().__init__()
         self.embedding = nn.Embedding(vocab_size, emb_dim)
         self.rnn = nn.LSTM(emb_dim + enc_hidden_dim, dec_hidden_dim, batch_first=True)
-        self.attn = LuongAttention(enc_hidden_dim)
+        self.attn = LuongAttention()
         self.out = nn.Linear(dec_hidden_dim, vocab_size)
         self.hidden_proj = nn.Linear(dec_hidden_dim, enc_hidden_dim)
-        self.rnn_layers = 1
         self.dec_hidden_dim = dec_hidden_dim
 
     def forward(self, input_token, prev_hidden, encoder_outputs):

@@ -3,11 +3,23 @@
 Owns request-scoped concerns (validating uploads, calling preprocessing,
 invoking the model, converting to MathML) so routes.py stays HTTP-only.
 """
+import base64
+import io
 from dataclasses import dataclass
+
+from PIL import Image
 
 from app.deep_learning.inference import EquationRecognizer
 from app.deep_learning.postprocessing import latex_to_mathml
 from app.deep_learning.preprocessing import preprocess_equation_image_for_inference
+
+
+def encode_preview_png(image_array) -> str:
+    """Encodes a uint8 ndarray as a base64 PNG data URI for inline <img> use."""
+    pil_img = Image.fromarray(image_array)
+    buf = io.BytesIO()
+    pil_img.save(buf, format="PNG")
+    return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
 
 
 @dataclass

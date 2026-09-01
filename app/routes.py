@@ -1,10 +1,11 @@
 """HTTP layer only: request/response handling. No Deep Learning code here."""
-import json
 import os
 
 from flask import Blueprint, Response, current_app, jsonify, render_template, request, send_from_directory
 
 from app.deep_learning.preprocessing import PreprocessingError
+from app.extensions import limiter
+from app.services.inference_service import encode_preview_png
 
 bp = Blueprint("routes", __name__)
 
@@ -25,20 +26,11 @@ def _service_or_error():
     return service, None
 
 
-def _load_examples_meta():
-    """Returns (meta_dict, warning). meta_dict is {} if examples.json is missing."""
-    meta_path = os.path.join(current_app.config["EXAMPLES_DIR"], "examples.json")
-    if not os.path.exists(meta_path):
-        return {}, "No example metadata found."
-    with open(meta_path, encoding="utf-8") as f:
-        return json.load(f), None
-
-
 @bp.route("/")
 @bp.route("/recognize")
 def recognize_page():
     _, load_error = _service_or_error()
-    examples_meta, _warning = _load_examples_meta()
+    examples_meta = current_app.extensions["examples_meta"]
     samples = [
         {"filename": fname, "desc": meta.get("desc", fname)}
         for fname, meta in list(examples_meta.items())[:QUICK_START_SAMPLE_COUNT]
@@ -49,13 +41,19 @@ def recognize_page():
 
 @bp.route("/examples/<path:filename>")
 def serve_example_image(filename):
-    examples_meta, _warning = _load_examples_meta()
+    examples_meta = current_app.extensions["examples_meta"]
     if filename not in examples_meta:
         return jsonify({"error": "Not found."}), 404
     return send_from_directory(current_app.config["EXAMPLES_DIR"], filename)
 
 
 @bp.route("/api/predict", methods=["POST"])
+@limiter.limit(
+    lambda: current_app.config["RATE_LIMIT_PREDICT"],
+    # Evaluated per-request (not at import time), so this correctly sees
+    # TESTING even though the test suite sets it *after* create_app() runs.
+    exempt_when=lambda: current_app.config.get("TESTING", False),
+)
 def predict():
     service, load_error = _service_or_error()
     if service is None:
@@ -79,8 +77,6 @@ def predict():
         current_app.logger.exception("Inference failed")
         return jsonify({"error": "Inference failed due to an internal error."}), 500
 
-    from app import encode_preview_png
-
     return jsonify({
         "preview_image": encode_preview_png(result.preview_image),
         "greedy_latex": result.greedy_latex,
@@ -88,49 +84,6 @@ def predict():
         "beam_latex": result.beam_latex,
         "beam_mathml": result.beam_mathml,
     })
-
-
-@bp.route("/examples")
-def examples_page():
-    service, load_error = _service_or_error()
-    examples_dir = current_app.config["EXAMPLES_DIR"]
-    examples_meta, warning = _load_examples_meta()
-
-    if not examples_meta:
-        return render_template("examples.html", examples=[], load_error=load_error, warning=warning)
-
-    from app import encode_preview_png
-
-    examples = []
-    for fname, meta in examples_meta.items():
-        img_path = os.path.join(examples_dir, fname)
-        entry = {"filename": fname, "desc": meta.get("desc", fname), "ground_truth": meta.get("latex", "")}
-        if not os.path.exists(img_path):
-            entry["error"] = "Image file missing on disk."
-            examples.append(entry)
-            continue
-
-        if service is None:
-            entry["error"] = load_error
-            examples.append(entry)
-            continue
-
-        with open(img_path, "rb") as fimg:
-            image_bytes = fimg.read()
-        try:
-            result = service.predict_from_bytes(image_bytes)
-            entry.update({
-                "preview_image": encode_preview_png(result.preview_image),
-                "greedy_latex": result.greedy_latex,
-                "greedy_mathml": result.greedy_mathml,
-                "beam_latex": result.beam_latex,
-                "beam_mathml": result.beam_mathml,
-            })
-        except Exception as exc:
-            entry["error"] = str(exc)
-        examples.append(entry)
-
-    return render_template("examples.html", examples=examples, load_error=load_error, warning=None)
 
 
 @bp.route("/about")
