@@ -42,7 +42,7 @@
   <ul class="feature-list" style="margin-top: var(--space-4);">
     <li>
       <span class="feat-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
-      <div><strong>Preprocess</strong> &mdash; the image is converted to grayscale, resized, and normalized, so the model sees a consistent input regardless of the original photo's size or color.</div>
+      <div><strong>Preprocess</strong> &mdash; the image is converted to grayscale, cropped to its content bounding box, sharpness/contrast-enhanced, and Otsu-binarized to pure black and white, then resized and normalized so the model sees a consistent input regardless of the original photo's size, framing, or lighting.</div>
     </li>
     <li>
       <span class="feat-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
@@ -58,7 +58,7 @@
     </li>
   </ul>
 
-  <p class="hint" style="margin-top: var(--space-4);">Beam search decoding is shown as the primary result since it's usually more accurate; greedy decoding runs alongside it and is available as a faster, secondary comparison.</p>
+  <p class="hint" style="margin-top: var(--space-4);">Beam search decoding is shown as the primary result since it explores more candidate sequences before choosing one; greedy decoding runs alongside it as a faster, secondary comparison. In practice the two are usually close, and either can come out ahead on a given equation &mdash; when they differ, the highlighted tokens make it easy to compare and pick the one that looks right.</p>
 </section>
 
 <section class="card">
@@ -83,6 +83,10 @@
     <li>
       <span class="feat-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
       <div><strong>Local result history</strong> — your last few uploads stay one click away, kept only in your browser.</div>
+    </li>
+    <li>
+      <span class="feat-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <div><strong>Correctness feedback</strong> — a quick thumbs up/down on each result, so you can flag whether it looked right.</div>
     </li>
   </ul>
 
