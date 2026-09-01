@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (without LFS -- fetched separately below so it can be cached)
+        uses: actions/checkout@v4
+        with:
+          lfs: false
+
+      # models/full_checkpoint.pt is ~395MB via Git LFS. GitHub's free LFS
+      # bandwidth quota is 1GB/month, so re-downloading it on every CI run
+      # would exhaust that in a couple of runs. Cache it, keyed on the LFS
+      # pointer content, so it's only re-pulled when the checkpoint changes.
+      - name: Cache Git LFS objects
+        id: lfs-cache
+        uses: actions/cache@v4
+        with:
+          path: .git/lfs
+          key: lfs-${{ hashFiles('models/*.pt', 'models/*.json') }}
+
+      - name: Pull Git LFS objects
+        run: |
+          git lfs install --local
+          git lfs pull
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: requirements-dev.txt
+
+      # System libs opencv-python-headless/Pillow need at runtime -- mirrors
+      # the apt-get install list in the Dockerfile.
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libglib2.0-0 libsm6 libxext6 libxrender1
+
+      - name: Install Python dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Lint (ruff)
+        run: ruff check app/ tests/
+
+      - name: Test (pytest)
+        run: pytest tests/ -v --cov=app --cov-report=term-missing
