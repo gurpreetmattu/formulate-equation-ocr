@@ -37,12 +37,14 @@ _CSP = (
 
 
 def _load_examples_meta(examples_dir):
-    """Returns (meta_dict, warning). meta_dict is {} if examples.json is missing."""
+    """Returns {} if examples.json is missing (logged, not fatal -- the
+    quick-start samples are a nice-to-have, not required for the app to run)."""
     meta_path = os.path.join(examples_dir, "examples.json")
     if not os.path.exists(meta_path):
-        return {}, "No example metadata found."
+        logger.warning("No examples.json found at %s -- quick-start samples will be empty.", meta_path)
+        return {}
     with open(meta_path, encoding="utf-8") as f:
-        return json.load(f), None
+        return json.load(f)
 
 
 def create_app(config_class=Config):
@@ -109,9 +111,7 @@ def create_app(config_class=Config):
     # Read once at startup instead of on every request -- the examples/
     # directory is a static, build-time asset (see Dockerfile), not
     # something that changes while the process is running.
-    examples_meta, examples_warning = _load_examples_meta(config_class.EXAMPLES_DIR)
-    app.extensions["examples_meta"] = examples_meta
-    app.extensions["examples_warning"] = examples_warning
+    app.extensions["examples_meta"] = _load_examples_meta(config_class.EXAMPLES_DIR)
 
     try:
         recognizer = EquationRecognizer(config_class)

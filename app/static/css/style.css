@@ -639,21 +639,7 @@ h3 {
   border: 1px solid transparent;
 }
 .banner-error { background: var(--danger-soft); color: var(--danger); border-color: color-mix(in srgb, var(--danger) 25%, transparent); }
-.banner-warn { background: var(--warn-soft); color: var(--warn); border-color: color-mix(in srgb, var(--warn) 25%, transparent); }
 .banner svg { flex-shrink: 0; margin-top: 2px; }
-
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 0.2rem 0.6rem;
-  border-radius: var(--radius-pill);
-}
-.badge-success { background: var(--success-soft); color: var(--success); }
-.badge-neutral { background: var(--accent-soft); color: var(--accent); }
-.badge-danger { background: var(--danger-soft); color: var(--danger); }
 
 /* ---------- Loading / empty states ---------- */
 
@@ -939,7 +925,7 @@ h3 {
   transition: border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
   animation: chip-in 0.2s ease both;
 }
-.history-chip:hover, .history-chip.is-active { border-color: var(--accent); color: var(--text-strong); transform: translateY(-1px); }
+.history-chip:hover { border-color: var(--accent); color: var(--text-strong); transform: translateY(-1px); }
 @keyframes chip-in {
   from { opacity: 0; transform: scale(0.92); }
   to { opacity: 1; transform: scale(1); }
