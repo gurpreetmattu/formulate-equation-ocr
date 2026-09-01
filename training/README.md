@@ -4,10 +4,9 @@ Kept for reproducibility, separate from the deployed inference application.
 
 - `notebooks/preprocessing.ipynb` — dataset preprocessing (im2latex-100k formulas +
   images → normalized/tokenized training data, vocab construction).
-- `notebooks/training.ipynb` — model training loop for the encoder/seq_model/decoder
-  architecture defined in `app/deep_learning/model.py`.
-- `notebooks/training_all_metrics.ipynb` — extended training run with additional
-  metric tracking.
+- `notebooks/training_all_metrics.ipynb` — model training loop for the
+  encoder/seq_model/decoder architecture defined in `app/deep_learning/model.py`,
+  with BLEU/WER/CER/CRR metric tracking.
 - `notebooks/testing.ipynb` — evaluation of a trained checkpoint.
 
 None of this is required to run the Flask application in `app/` — it only needs
