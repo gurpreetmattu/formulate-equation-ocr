@@ -1,4 +1,4 @@
-# Automated Printed Equation Recognition & LaTeX/MathML Conversion
+# Formulate — Automated Printed Equation Recognition & LaTeX/MathML Conversion
 
 A deep-learning application that converts images of **printed mathematical equations**
 into **LaTeX** and **MathML**, served through a production Flask web application.
@@ -70,7 +70,8 @@ redesigning) was the explicit goal of this refactor — see `app/deep_learning/`
 - End-to-end OCR: image → LaTeX & MathML
 - Greedy and beam-search decoding shown side by side
 - Rendered LaTeX preview (MathJax) alongside raw LaTeX/MathML source
-- Example gallery comparing predictions against ground truth
+- Crop/rotate adjustment, local result history, and correctness feedback,
+  all client-side (see `app/static/js/recognize.js`)
 - JSON API (`/api/predict`) usable independently of the web UI
 - `/healthz` endpoint reporting whether the model loaded and which device it's on
 
@@ -89,6 +90,7 @@ redesigning) was the explicit goal of this refactor — see `app/deep_learning/`
 app/
   config.py                  Environment-driven configuration
   routes.py                  Flask routes (HTTP only)
+  extensions.py              Shared extension instances (Flask-Limiter)
   __init__.py                App factory; loads the model once at startup
   services/
     inference_service.py     Glue between routes and the DL pipeline
@@ -99,11 +101,15 @@ app/
     postprocessing.py        Token joining + LaTeX -> MathML fixups
   templates/, static/        Web UI
 models/                      full_checkpoint.pt, vocab.json (see below)
-training/                    Original training/preprocessing notebooks + data-prep logs
+training/                    Original training/preprocessing notebooks
 examples/                    Sample images + ground truth used by the Recognize page's quick-start samples
+scripts/                     Local dev/verification helpers (see scripts/run_local.md)
+docs/                        Project report
 tests/                       Pytest suite (see "Running Tests")
+.github/workflows/           CI (lint + test on push/PR)
 wsgi.py                      Production entrypoint (Gunicorn) / local dev runner
 Dockerfile, .dockerignore    Container build
+cloudrun-service.yaml        Reference Cloud Run (GPU) service manifest
 ```
 
 `dataset/` and `sample/` (raw training images/CSVs, several hundred MB) are **not**
@@ -173,10 +179,10 @@ on CPU and does not require a GPU.
 ## Docker
 
 ```bash
-docker build -t equation-ocr .
-docker run --rm -p 8080:8080 --env-file .env equation-ocr
+docker build -t formulate .
+docker run --rm -p 8080:8080 --env-file .env formulate
 # with GPU (requires nvidia-container-toolkit):
-docker run --rm --gpus all -p 8080:8080 --env-file .env equation-ocr
+docker run --rm --gpus all -p 8080:8080 --env-file .env formulate
 ```
 
 The image is based on an official NVIDIA CUDA runtime image so the same build works
@@ -193,7 +199,7 @@ workload — a plain CPU-only Cloud Run service would work (the app falls back t
 CPU automatically) but beam-search latency will be materially higher than on GPU.
 
 ```bash
-gcloud run deploy equation-ocr \
+gcloud run deploy formulate \
   --source . \
   --region us-central1 \
   --gpu 1 --gpu-type nvidia-l4 \
@@ -220,7 +226,8 @@ Notes:
 ## Environment Variables
 
 See `.env.example` for the full list (`MODEL_PATH`, `VOCAB_PATH`, `DEVICE`,
-`SECRET_KEY`, `DEBUG`, `HOST`, `PORT`, `MAX_UPLOAD_MB`, `EXAMPLES_DIR`).
+`SECRET_KEY`, `DEBUG`, `HOST`, `PORT`, `MAX_UPLOAD_MB`, `RATE_LIMIT_PREDICT`,
+`EXAMPLES_DIR`).
 
 ## Production Hardening
 
@@ -245,6 +252,11 @@ that scope rather than a generic checklist:
   non-JSON error response instead of a raw parse exception reaching the user.
 - `robots.txt`, favicon, and Open Graph/Twitter meta tags (this is a public tool with
   nothing to hide from crawlers or unlink-preview).
+- Per-IP rate limiting on `/api/predict` (`app/extensions.py`, `RATE_LIMIT_PREDICT`)
+  so one client can't starve the small worker-thread pool that CPU/GPU-bound
+  inference runs on.
+- CI (`.github/workflows/ci.yml`): `ruff` + the full `pytest` suite run on every
+  push/PR.
 
 **Deliberately out of scope (and why):**
 - **No authentication/authorization, admin area, or CSRF token** — there is no
@@ -256,10 +268,10 @@ that scope rather than a generic checklist:
 - **No upload progress bar** — typical inputs are KB-sized crops against an 8MB cap;
   transfer time is negligible next to the multi-second CPU inference time the
   existing loading state already covers.
-- **No Playwright/E2E suite** — the core flows (upload, drag-and-drop, keyboard
-  operability, error states) have been manually verified end-to-end in a real
-  browser; a full E2E framework has no CI pipeline to run in yet, so it's listed
-  under Next Steps rather than added speculatively.
+- **No Playwright/E2E suite** — the core flows (upload, drag-and-drop, crop/adjust,
+  keyboard operability, error states) have been manually verified end-to-end in a
+  real browser. CI now runs lint + the unit/integration suite; a browser-based E2E
+  suite would be the next layer if this ever needs it, not added speculatively.
 
 ## Limitations
 
@@ -267,8 +279,6 @@ that scope rather than a generic checklist:
   handwriting or noisy scans is not guaranteed.
 - Beam search is meaningfully slower on CPU than GPU; expect higher latency on
   CPU-only deployments.
-- The example gallery re-runs inference on every page load rather than caching
-  results — fine for a handful of examples, not designed for a large gallery.
 - **GPU-accelerated inference, CUDA initialization, and end-to-end prediction
   correctness with `full_checkpoint.pt` have not been verified in this environment**
   (no GPU was available during this refactor) — see Validation below.
@@ -277,8 +287,8 @@ that scope rather than a generic checklist:
 
 **Verified on the machine this was refactored on (CPU only, no GPU):**
 - Python syntax / imports across `app/`
-- Flask app factory boots and all routes respond (`/`, `/examples`, `/about`,
-  `/healthz`, `/api/predict` error paths)
+- Flask app factory boots and all routes respond (`/`, `/about`, `/healthz`,
+  `/api/predict` error paths)
 - Preprocessing unit tests (shape, dtype, normalization range, error handling)
 - Postprocessing unit tests (MathML fixups, token joining)
 - Model construction + forward-pass shape tests with the configured hyperparameters
@@ -298,6 +308,19 @@ that scope rather than a generic checklist:
   `/healthz` plus a real `/api/predict` request (via `curl -F image=@examples/1.png`)
   both returned correct results identical to the non-Docker CPU run above
 
+**Verified in a later hardening pass (also CPU only, no GPU, no Docker rebuild):**
+- Full test suite (`pytest tests/`, 28 tests) and `ruff check app/ tests/` both clean,
+  including a real end-to-end `/api/predict` happy-path test and a test that exercises
+  actual rate-limit enforcement (not just that the decorator is present)
+- Startup shape validation (`EquationRecognizer._validate_input_shape`): confirmed it
+  boots silently against the real checkpoint, and correctly raises `ModelLoadError`
+  when `IMG_HEIGHT`/`IMG_WIDTH` are deliberately mismatched
+- Batched + length-normalized `decode_beam`: diffed against the original per-beam-loop
+  algorithm on all three example images (bit-for-bit identical before the length-
+  normalization fix; the fix itself verified separately against ground truth)
+- Rate limiting (`RATE_LIMIT_PREDICT`): confirmed a request over the configured limit
+  gets a `429` with the expected JSON body
+
 **Not verified — requires GPU:**
 - CUDA initialization and `DEVICE=cuda` code path (the container build includes the
   CUDA-enabled torch wheel, but this machine has no NVIDIA driver to exercise it)
@@ -307,6 +330,11 @@ that scope rather than a generic checklist:
 - Prediction correctness end-to-end on GPU (only CPU-loaded weights were exercised)
 - Cloud Run GPU deployment behavior (cold start timing, concurrency behavior under
   real GPU load, `--gpu`/`--gpu-type` flags against a real project/quota)
+
+**Not re-verified since the original `docker build`/`docker run` pass:**
+- Flask-Limiter was added as a new runtime dependency in the later hardening pass
+  above; the Docker image has not been rebuilt/re-run since, so the image-size and
+  cold-start figures above predate it.
 
 ## Contact
 

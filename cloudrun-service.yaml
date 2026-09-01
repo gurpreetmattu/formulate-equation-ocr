@@ -7,7 +7,7 @@
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
-  name: equation-ocr
+  name: formulate
   labels:
     cloud.googleapis.com/location: us-central1
 spec:
@@ -22,7 +22,7 @@ spec:
       containerConcurrency: 8
       timeoutSeconds: 300
       containers:
-        - image: REGION-docker.pkg.dev/PROJECT_ID/REPO/equation-ocr:latest
+        - image: REGION-docker.pkg.dev/PROJECT_ID/REPO/formulate:latest
           ports:
             - containerPort: 8080
           resources:
