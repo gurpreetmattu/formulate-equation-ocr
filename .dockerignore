@@ -16,4 +16,4 @@ training
 *.ipynb
 tests
 *.md
-docs
+*.pdf

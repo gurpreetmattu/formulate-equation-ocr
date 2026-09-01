@@ -104,11 +104,11 @@ models/                      full_checkpoint.pt, vocab.json (see below)
 training/                    Original training/preprocessing notebooks
 examples/                    Sample images + ground truth used by the Recognize page's quick-start samples
 scripts/                     Local dev/verification helpers (see scripts/run_local.md)
-docs/                        Project report
 tests/                       Pytest suite (see "Running Tests")
 .github/workflows/           CI (lint + test on push/PR)
 wsgi.py                      Production entrypoint (Gunicorn) / local dev runner
 Dockerfile, .dockerignore    Container build
+formulate-dossier.pdf        Full project reference: architecture, model, performance, deployment
 cloudrun-service.yaml        Reference Cloud Run (GPU) service manifest
 ```
 
