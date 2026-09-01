@@ -16,4 +16,4 @@ training
 *.ipynb
 tests
 *.md
-Report_Automated_Printed_Equation_Recognition_and_LaTeX_MathML_Conversion_from_Images.pdf
+docs

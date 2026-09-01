@@ -9,9 +9,6 @@ Kept for reproducibility, separate from the deployed inference application.
 - `notebooks/training_all_metrics.ipynb` — extended training run with additional
   metric tracking.
 - `notebooks/testing.ipynb` — evaluation of a trained checkpoint.
-- `artifacts/` — logs produced during dataset preparation (missing/empty image
-  lists, token/encoding error summaries) — useful context if you retrain or debug
-  dataset issues, not required to run the deployed app.
 
 None of this is required to run the Flask application in `app/` — it only needs
 `models/full_checkpoint.pt` and `models/vocab.json`. The raw dataset these notebooks
