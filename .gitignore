@@ -20,9 +20,6 @@ env/
 # Jupyter
 .ipynb_checkpoints/
 
-# Streamlit legacy config caches
-.streamlit/secrets.toml
-
 # Testing / tooling caches
 .pytest_cache/
 .mypy_cache/
