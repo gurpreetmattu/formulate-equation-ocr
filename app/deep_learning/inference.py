@@ -140,7 +140,14 @@ class EquationRecognizer:
                         next_score = score + log_p
                         next_finished = idx == self.eos_token_id
                         new_beams.append((next_tokens, beam_hidden, next_score, next_finished))
-                beams = sorted(new_beams, key=lambda b: b[2], reverse=True)[:beam_width]
+                # Rank by length-normalized score, not the raw cumulative
+                # log-prob sum. Summing log-probs without normalizing
+                # systematically favors shorter sequences (every extra
+                # token can only make the sum more negative), which is
+                # exactly why beam search under-performed greedy decoding
+                # in eval -- this ranks candidates fairly regardless of how
+                # many tokens they've generated so far.
+                beams = sorted(new_beams, key=lambda b: b[2] / len(b[0]), reverse=True)[:beam_width]
                 if all(b[3] for b in beams):
                     break
             best_tokens = beams[0][0][1:]
