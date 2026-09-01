@@ -1,6 +1,7 @@
 """Model loading and decoding logic. Framework-agnostic (no Flask imports)."""
 import json
 import logging
+import pickle
 
 import torch
 
@@ -55,6 +56,14 @@ class EquationRecognizer:
                 f"Checkpoint not found at {config.MODEL_PATH}. "
                 "See README 'Model Download/Setup' for how to obtain it."
             ) from exc
+        except pickle.UnpicklingError:
+            # weights_only=True's safe unpickler allowlist isn't guaranteed identical
+            # across torch builds/platforms (e.g. the CUDA wheel used in the deployed
+            # container vs. a CPU wheel used locally). The checkpoint is our own
+            # trusted artifact (tracked in this repo), so fall back to the full loader
+            # rather than hard-crashing the app on environments where the safe path
+            # rejects it.
+            ckpt = torch.load(config.MODEL_PATH, map_location=self.device, weights_only=False)
 
         self.encoder.load_state_dict(ckpt["encoder"])
         self.seq_model.load_state_dict(ckpt["seq_model"])
