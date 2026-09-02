@@ -34,9 +34,21 @@ RUN pip install --no-cache-dir torch==2.4.1 --index-url https://download.pytorch
 COPY app/ ./app/
 COPY wsgi.py .
 COPY examples/ ./examples/
-# The trained checkpoint and vocab are expected under models/ at build time,
-# or mounted/downloaded at deploy time -- see README "Model Download/Setup".
-COPY models/ ./models/
+
+# The Cloud Build trigger that builds this image checks out the GitHub repo
+# without resolving Git LFS pointers, so `models/` in the build context here
+# is just LFS stub text (e.g. "version https://git-lfs.github.com/..."), not
+# the real checkpoint -- COPYing it directly bakes in a broken file that
+# crashes the app on boot. Fetch the real LFS objects explicitly instead.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        git git-lfs ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && git lfs install \
+    && git clone --depth=1 https://github.com/gurpreetmattu/formulate-equation-ocr.git /tmp/src \
+    && cd /tmp/src && git lfs pull \
+    && mkdir -p /app/models && cp -r /tmp/src/models/. /app/models/ \
+    && rm -rf /tmp/src \
+    && apt-get purge -y git git-lfs && apt-get autoremove -y
 
 RUN useradd --create-home --uid 1000 appuser && chown -R appuser:appuser /app
 USER appuser
