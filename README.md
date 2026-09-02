@@ -3,6 +3,8 @@
 A deep-learning application that converts images of **printed mathematical equations**
 into **LaTeX** and **MathML**, served through a production Flask web application.
 
+**Live demo:** https://formulate-equation-ocr-961383775469.asia-south1.run.app/
+
 ## Overview
 
 Upload a scanned/printed equation image → a custom encoder-decoder network predicts
