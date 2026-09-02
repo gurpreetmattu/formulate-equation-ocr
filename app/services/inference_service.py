@@ -36,6 +36,19 @@ class InferenceService:
         self.recognizer = recognizer
         self.config = config
 
+    @staticmethod
+    def _best_convertible(candidates: list[str]) -> tuple[str, str]:
+        """Beam search's top-scoring candidate is usually the most accurate,
+        but occasionally it's syntactically invalid LaTeX (e.g. unbalanced
+        \\left/\\right) that latex2mathml can't convert -- try each candidate,
+        best first, and use the first one that actually converts. Falls back
+        to the top candidate's (failed) conversion if none of them convert."""
+        for latex in candidates:
+            mathml = latex_to_mathml(latex)
+            if not mathml.startswith("[Conversion error"):
+                return latex, mathml
+        return candidates[0], latex_to_mathml(candidates[0])
+
     def predict_from_bytes(self, image_bytes: bytes) -> PredictionResult:
         """Raises PreprocessingError on invalid/unreadable images."""
         img_tensor, preview_image = preprocess_equation_image_for_inference(
@@ -49,10 +62,11 @@ class InferenceService:
         greedy_mathml = latex_to_mathml(greedy_latex)
 
         try:
-            beam_latex = self.recognizer.decode_beam(img_tensor, self.config.BEAM_WIDTH)
+            beam_candidates = self.recognizer.decode_beam_candidates(img_tensor, self.config.BEAM_WIDTH)
+            beam_latex, beam_mathml = self._best_convertible(beam_candidates)
         except Exception as exc:
             beam_latex = f"[Prediction error: {exc}]"
-        beam_mathml = latex_to_mathml(beam_latex)
+            beam_mathml = latex_to_mathml(beam_latex)
 
         return PredictionResult(
             greedy_latex=greedy_latex,

@@ -116,6 +116,14 @@ class EquationRecognizer:
         return tokens_to_latex(self.idx_to_token, pred_ids)
 
     def decode_beam(self, image_tensor: torch.Tensor, beam_width: int | None = None) -> str:
+        return self.decode_beam_candidates(image_tensor, beam_width)[0]
+
+    def decode_beam_candidates(self, image_tensor: torch.Tensor, beam_width: int | None = None) -> list[str]:
+        """Returns every finished beam's LaTeX, best (highest length-normalized
+        score) first. The top beam is usually the most accurate, but it can
+        occasionally be syntactically invalid LaTeX (e.g. unbalanced \\left/
+        \\right) -- callers that need convertible output should try each
+        candidate in order rather than assuming candidates[0] always parses."""
         beam_width = beam_width or self.config.BEAM_WIDTH
         with torch.no_grad():
             encoder_outputs = self._encode(image_tensor)
@@ -159,7 +167,10 @@ class EquationRecognizer:
                 beams = sorted(new_beams, key=lambda b: b[2] / len(b[0]), reverse=True)[:beam_width]
                 if all(b[3] for b in beams):
                     break
-            best_tokens = beams[0][0][1:]
-            if self.eos_token_id in best_tokens:
-                best_tokens = best_tokens[: best_tokens.index(self.eos_token_id)]
-        return tokens_to_latex(self.idx_to_token, best_tokens)
+            candidates = []
+            for tokens, _hidden, _score, _finished in beams:
+                tokens = tokens[1:]
+                if self.eos_token_id in tokens:
+                    tokens = tokens[: tokens.index(self.eos_token_id)]
+                candidates.append(tokens_to_latex(self.idx_to_token, tokens))
+        return candidates

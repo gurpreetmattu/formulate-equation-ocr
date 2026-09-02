@@ -24,4 +24,8 @@ def latex_to_mathml(latex: str) -> str:
         mathml = latex2mathml_convert(latex)
         return fix_mathml_block_tag(mathml)
     except Exception as exc:
-        return f"[Conversion error: {exc}]"
+        # Some latex2mathml exceptions (e.g. ExtraLeftOrMissingRightError) carry
+        # no message, so str(exc) is empty -- fall back to the class name so the
+        # error is still informative rather than showing "[Conversion error: ]".
+        detail = str(exc) or type(exc).__name__
+        return f"[Conversion error: {detail}]"
